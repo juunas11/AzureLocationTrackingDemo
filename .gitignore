@@ -1,0 +1,13 @@
+﻿.vs
+bin
+obj
+*.csproj.user
+src/AzureLocationTracking.DataProcessor/DataProcessorPublish.zip
+src/AzureLocationTracking.DataProcessor/publish_output
+src/AzureLocationTracking.Functions/publish_output
+src/AzureLocationTracking.Functions/FunctionsPublish.zip
+src/AzureLocationTracking.DataProcessor/local.settings.json
+deployment/config.json
+src/AzureLocationTracking.Frontend/.env.development
+src/AzureLocationTracking.Frontend/.env.production
+src/AzureLocationTracking.Functions/static

@@ -1,0 +1,13 @@
+.create table locations (['DeviceId']:guid, ['Longitude']:real, ['Latitude']:real, ['Timestamp']:datetime)
+
+.alter table locations policy ingestionbatching @'{"MaximumBatchingTimeSpan":"00:00:15"}'
+
+.create-or-alter table locations ingestion json mapping 'locations_mapping' 
+```
+[
+    {"column":"DeviceId", "Properties":{"Path":"$[\'Id\']"}},
+    {"column":"Longitude", "Properties":{"Path":"$[\'Lng\']"}},
+    {"column":"Latitude", "Properties":{"Path":"$[\'Lat\']"}},
+    {"column":"Timestamp", "Properties":{"Path":"$[\'Ts\']"}},
+]
+```

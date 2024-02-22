@@ -1,0 +1,21 @@
+﻿{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=True",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "SqlConnectionString": "Server=.\\SQLEXPRESS;Initial Catalog=LocationDataDb;Integrated Security=True;Encrypt=False",
+    "EventHubName": "locationdatadev",
+    "EventHubConnection": "Endpoint=sb://your-event-hub.servicebus.windows.net/;SharedAccessKeyName=dev;SharedAccessKey=***",
+    "AzureSignalRConnectionString": "Endpoint=https://your-signalr-service.service.signalr.net;AccessKey=***;Version=1.0;",
+    "AzureSignalRHubName": "locationTrackingDev",
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=***;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/",
+    "LocalAuthTenantId": "your-azure-ad-tenant-id",
+    "MapsClientId": "your-azure-maps-client-id",
+    "AzureAdTenantId": "",
+    "AzureAdClientId": "",
+    "AzureAdAppScope": "",
+    "IotHubHostName": "your-iot-hub.azure-devices.net",
+    "AdxClusterUri": "https://your-adx-cluster.kusto.windows.net",
+    "AdxDbName": "LocationDataDev"
+  }
+}

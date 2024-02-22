@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<AzureFunctionsVersion>v4</AzureFunctionsVersion>
+		<OutputType>Exe</OutputType>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Dapper" Version="2.1.28" />
+		<PackageReference Include="GeoJSON.Net" Version="1.2.19" />
+		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.22.0" />
+		<PackageReference Include="Microsoft.Azure.Devices" Version="1.39.1" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.21.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="1.2.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.EventHubs" Version="6.1.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.SignalRService" Version="1.13.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.17.0" />
+		<PackageReference Include="Microsoft.Azure.Kusto.Data" Version="12.0.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+		<PackageReference Include="Microsoft.SqlServer.Types" Version="160.1000.6" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\AzureLocationTracking.Messages\AzureLocationTracking.Messages.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="static\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="local.settings.json" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="host.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="local.settings.sample.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		  <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</None>
+		<None Update="local.settings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</None>
+	</ItemGroup>
+</Project>
