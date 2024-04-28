@@ -7,8 +7,7 @@ param eventHubNamespaceName string
 param prodLocationDataEventHubName string
 param iotHubName string
 param mapsAccountName string
-param sqlServerName string
-param sqlDbName string
+param cosmosAccountName string
 param appInsightsName string
 param signalRName string
 param adxClusterName string
@@ -18,6 +17,7 @@ param prodSignalRHubName string
 var mapsSearchRenderReaderRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '6be48352-4f82-47c9-ad5e-0acacefdb005')
 var iotHubTwinContributorRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '494bdba2-168f-4f31-a0a1-191d2f7c028c')
 var eventHubReceiverRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde')
+var cosmosContributorRoleDefinitionId = '00000000-0000-0000-0000-000000000002'
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' existing = {
   name: eventHubNamespaceName
@@ -36,13 +36,8 @@ resource mapsAccount 'Microsoft.Maps/accounts@2021-12-01-preview' existing = {
   name: mapsAccountName
 }
 
-resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' existing = {
-  name: sqlServerName
-}
-
-resource sqlDb 'Microsoft.Sql/servers/databases@2022-05-01-preview' existing = {
-  parent: sqlServer
-  name: sqlDbName
+resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' existing = {
+  name: cosmosAccountName
 }
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
@@ -136,8 +131,24 @@ resource functionsApp 'Microsoft.Web/sites@2022-03-01' = {
           value: prodLocationDataEventHub.name
         }
         {
-          name: 'SqlConnectionString'
-          value: 'Server=${sqlServer.name}${environment().suffixes.sqlServerHostname}; Database=${sqlDb.name}; Authentication=Active Directory Managed Identity; Encrypt=True;'
+          name: 'CosmosEndpoint'
+          value: cosmosAccount.properties.documentEndpoint
+        }
+        {
+          name: 'CosmosDatabase'
+          value: naming.cosmosDatabase
+        }
+        {
+          name: 'CosmosVehicleContainer'
+          value: naming.cosmosVehicleContainer
+        }
+        {
+          name: 'CosmosGeofenceContainer'
+          value: naming.cosmosGeofenceContainer
+        }
+        {
+          name: 'CosmosVehiclesInGeofencesContainer'
+          value: naming.cosmosVehiclesInGeofencesContainer
         }
         {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
@@ -228,6 +239,20 @@ resource functionsAppMapsReaderRoleAssignment 'Microsoft.Authorization/roleAssig
     roleDefinitionId: mapsSearchRenderReaderRoleDefinitionId
     principalId: functionsAppMapsIdentity.properties.principalId
     principalType: 'ServicePrincipal'
+  }
+}
+
+resource functionsAppCosmosContributorRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2023-11-15' = {
+  name: guid(cosmosAccount.id, functionsApp.id, cosmosContributorRoleDefinitionId)
+  parent: cosmosAccount
+  properties: {
+    principalId: functionsApp.identity.principalId
+    roleDefinitionId: resourceId(
+      'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions',
+      cosmosAccount.name,
+      cosmosContributorRoleDefinitionId
+    )
+    scope: cosmosAccount.id
   }
 }
 

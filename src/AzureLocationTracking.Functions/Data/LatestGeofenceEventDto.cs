@@ -2,12 +2,8 @@
 
 namespace AzureLocationTracking.Functions.Data;
 
-public class GeofenceEventDto
+public class LatestGeofenceEventDto
 {
-    [JsonProperty("id")]
-    public string Id { get; set; }
-    [JsonProperty("vehicleId")]
-    public Guid VehicleId { get; set; }
     [JsonProperty("geofenceId")]
     public Guid GeofenceId { get; set; }
     [JsonProperty("entryTimestamp")]

@@ -1,5 +1,4 @@
 ﻿using AzureLocationTracking.Functions.Data;
-using AzureLocationTracking.Functions.GeoJson;
 using GeoJSON.Net.Feature;
 using GeoJSON.Net.Geometry;
 using Microsoft.Azure.Functions.Worker;
@@ -23,7 +22,23 @@ public class GeofenceApiFunctions
     public async Task<HttpResponseData> GetGeofences(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/geofences")] HttpRequestData req)
     {
-        await _geofenceRepository.OpenConnectionAsync();
+        static Polygon ToGeoJson(Microsoft.Azure.Cosmos.Spatial.Polygon polygon)
+        {
+            // All our geofences have a single ring.
+            var ring = polygon.Rings.Single();
+            var positions = ring.Positions.Select(p => new Position(latitude: p.Latitude, longitude: p.Longitude)).ToList();
+            return new Polygon(new List<LineString> { new(positions) });
+        }
+
+        static Position GetCenter(Polygon polygon)
+        {
+            var coords = polygon.Coordinates.Single().Coordinates;
+            var minLat = coords.Min(p => p.Latitude);
+            var minLng = coords.Min(p => p.Longitude);
+            var maxLat = coords.Max(p => p.Latitude);
+            var maxLng = coords.Max(p => p.Longitude);
+            return new Position(latitude: (minLat + maxLat) / 2, longitude: (minLng + maxLng) / 2);
+        }
 
         var geofences = await _geofenceRepository.GetGeofencesAsync();
 
@@ -31,12 +46,12 @@ public class GeofenceApiFunctions
 
         foreach (var geofence in geofences)
         {
-            var polygon = geofence.Border.ToGeoJSONObject<Polygon>();
-            var center = geofence.Border.EnvelopeCenter();
-            var feature = new Feature(polygon, id: geofence.Id.ToString(), properties: new Dictionary<string, object>
+            var polygon = ToGeoJson(geofence.Border);
+            var center = GetCenter(polygon);
+            var feature = new Feature(polygon, id: geofence.Id, properties: new Dictionary<string, object>
             {
                 // GeoJSON uses longitude, latitude order.
-                ["center"] = new[] { center.Long.Value, center.Lat.Value },
+                ["center"] = new[] { center.Longitude, center.Latitude },
                 ["name"] = geofence.Name ?? ""
             });
             featureCollection.Features.Add(feature);

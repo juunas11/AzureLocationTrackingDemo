@@ -2,8 +2,7 @@ param location string = resourceGroup().location
 param containerAppName string
 param appInsightsName string
 param signalRName string
-param sqlServerName string
-param sqlDbName string
+param cosmosAccountName string
 param eventHubNamespaceName string
 param prodLocationDataEventHubName string
 param iotHubName string
@@ -21,15 +20,6 @@ resource signalR 'Microsoft.SignalRService/signalR@2022-08-01-preview' existing 
   name: signalRName
 }
 
-resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' existing = {
-  name: sqlServerName
-}
-
-resource sqlDb 'Microsoft.Sql/servers/databases@2022-05-01-preview' existing = {
-  parent: sqlServer
-  name: sqlDbName
-}
-
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' existing = {
   name: eventHubNamespaceName
 }
@@ -40,6 +30,10 @@ resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' existing = {
 
 resource adxCluster 'Microsoft.Kusto/clusters@2022-12-29' existing = {
   name: adxClusterName
+}
+
+resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' existing = {
+  name: cosmosAccountName
 }
 
 resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
@@ -561,39 +555,39 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
                       metrics: [
                         {
                           resourceMetadata: {
-                            id: sqlDb.id
+                            id: cosmosAccount.id
                           }
-                          name: 'dtu_consumption_percent'
+                          name: 'ServerSideLatency'
                           aggregationType: 4
-                          namespace: 'microsoft.sql/servers/databases'
+                          namespace: 'microsoft.documentdb/databaseaccounts'
                           metricVisualization: {
-                            displayName: 'Average DTU %'
+                            displayName: 'Latency (avg)'
                           }
                         }
                         {
                           resourceMetadata: {
-                            id: sqlDb.id
+                            id: cosmosAccount.id
                           }
-                          name: 'dtu_consumption_percent'
+                          name: 'ServerSideLatency'
                           aggregationType: 2
-                          namespace: 'microsoft.sql/servers/databases'
+                          namespace: 'microsoft.documentdb/databaseaccounts'
                           metricVisualization: {
-                            displayName: 'Min DTU %'
+                            displayName: 'Latency (min)'
                           }
                         }
                         {
                           resourceMetadata: {
-                            id: sqlDb.id
+                            id: cosmosAccount.id
                           }
-                          name: 'dtu_consumption_percent'
+                          name: 'ServerSideLatency'
                           aggregationType: 3
-                          namespace: 'microsoft.sql/servers/databases'
+                          namespace: 'microsoft.documentdb/databaseaccounts'
                           metricVisualization: {
-                            displayName: 'Max DTU %'
+                            displayName: 'Latency (max)'
                           }
                         }
                       ]
-                      title: 'SQL DB'
+                      title: 'CosmosDB latency'
                       titleKind: 1
                       visualization: {
                         chartType: 2
@@ -608,6 +602,50 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
             position: {
               x: 19
               y: 8
+              colSpan: 6
+              rowSpan: 4
+            }
+            metadata: {
+              #disable-next-line BCP036
+              type: 'Extension/HubsExtension/PartType/MonitorChartPart'
+              inputs: [
+                {
+                  name: 'sharedTimeRange'
+                  isOptional: true
+                }
+                {
+                  name: 'options'
+                  isOptional: true
+                  value: {
+                    chart: {
+                      metrics: [
+                        {
+                          resourceMetadata: {
+                            id: cosmosAccount.id
+                          }
+                          name: 'NormalizedRUConsumption'
+                          aggregationType: 3
+                          namespace: 'microsoft.documentdb/databaseaccounts'
+                          metricVisualization: {
+                            displayName: 'Normalized RU consumption'
+                          }
+                        }
+                      ]
+                      title: 'Cosmos RU usage'
+                      titleKind: 1
+                      visualization: {
+                        chartType: 2
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+          {
+            position: {
+              x: 7
+              y: 12
               colSpan: 6
               rowSpan: 4
             }
@@ -738,7 +776,7 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
           }
           {
             position: {
-              x: 7
+              x: 13
               y: 12
               colSpan: 6
               rowSpan: 4
@@ -804,7 +842,7 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
           }
           {
             position: {
-              x: 13
+              x: 19
               y: 12
               colSpan: 6
               rowSpan: 4
@@ -870,8 +908,8 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
           }
           {
             position: {
-              x: 19
-              y: 12
+              x: 7
+              y: 16
               colSpan: 6
               rowSpan: 4
             }

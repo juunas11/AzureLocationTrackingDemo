@@ -1,9 +1,9 @@
 ﻿using AzureLocationTracking.Functions.Data;
 using AzureLocationTracking.Messages;
 using Microsoft.ApplicationInsights;
+using Microsoft.Azure.Cosmos.Spatial;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using Microsoft.SqlServer.Types;
 using System.Text.Json;
 
 namespace AzureLocationTracking.Functions;
@@ -32,8 +32,6 @@ public class UpdateLatestLocationEventFunction
         var log = functionContext.GetLogger<CheckGeofencesEventFunction>();
         var exceptions = new List<Exception>();
         var signalRMessageActions = new List<SignalRMessageAction>();
-
-        await _vehicleRepository.OpenConnectionAsync();
 
         foreach (string eventData in events)
         {
@@ -74,31 +72,26 @@ public class UpdateLatestLocationEventFunction
         LocationUpdateEvent ev)
     {
         var vehicleId = ev.Id;
-        var location = SqlGeography.Point(latitude: ev.Lat, longitude: ev.Lng, srid: 4326);
+        var location = new Point(longitude: ev.Lng, latitude: ev.Lat);
 
         var signalRMessageActions = new List<SignalRMessageAction>();
 
-        await using (var transaction = await _vehicleRepository.BeginTransactionAsync())
+        await _vehicleRepository.UpdateLatestLocationAsync(vehicleId, location);
+
+        var gridLongitude = (int)Math.Floor(ev.Lng);
+        var gridLatitude = (int)Math.Floor(ev.Lat);
+
+        // Message is sent to a group of connections that are interested in the grid cell that the location is in.
+        signalRMessageActions.Add(new SignalRMessageAction("locationUpdated", new object[]
         {
-            await _vehicleRepository.UpdateLatestLocationAsync(vehicleId, location, transaction);
-
-            var gridLongitude = (int)Math.Floor(ev.Lng);
-            var gridLatitude = (int)Math.Floor(ev.Lat);
-
-            // Message is sent to a group of connections that are interested in the grid cell that the location is in.
-            signalRMessageActions.Add(new SignalRMessageAction("locationUpdated", new object[]
-            {
-                vehicleId.ToString(),
-                ev.Lat,
-                ev.Lng,
-                new DateTimeOffset(ev.Ts).ToUnixTimeMilliseconds(),
-            })
-            {
-                GroupName = $"grid:{gridLongitude}:{gridLatitude}",
-            });
-
-            await transaction.CommitAsync();
-        }
+            vehicleId.ToString(),
+            ev.Lat,
+            ev.Lng,
+            new DateTimeOffset(ev.Ts).ToUnixTimeMilliseconds(),
+        })
+        {
+            GroupName = $"grid:{gridLongitude}:{gridLatitude}",
+        });
 
         return signalRMessageActions;
     }

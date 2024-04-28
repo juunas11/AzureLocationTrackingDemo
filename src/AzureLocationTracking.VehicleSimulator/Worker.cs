@@ -5,13 +5,13 @@ using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Shared;
-using Microsoft.Data.SqlClient;
 using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO.Converters;
 using System.Text;
 using System.Text.Json;
-using Dapper;
+using Microsoft.Azure.Cosmos;
+using Azure.Identity;
 using AzureLocationTracking.VehicleSimulator.Extensions;
 
 namespace AzureLocationTracking.VehicleSimulator;
@@ -23,7 +23,11 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly TelemetryClient _telemetryClient;
     private readonly string _environment;
-    private readonly string _sqlConnectionString;
+    private readonly string? _managedIdentityClientId;
+    private readonly string _cosmosDbEndpoint;
+    private readonly string? _cosmosDbKey;
+    private readonly string _cosmosDbName;
+    private readonly string _cosmosVehicleContainerName;
     private readonly string _deviceProvisioningGlobalEndpoint;
     private readonly string _deviceProvisioningIdScope;
     private readonly string _deviceProvisioningPrimaryKey;
@@ -39,8 +43,15 @@ public class Worker : BackgroundService
 
         _environment = configuration["ENVIRONMENT"] ?? "prod";
 
-        _sqlConnectionString = configuration["SQL_CONNECTION_STRING"]
-            ?? throw new Exception("SQL_CONNECTION_STRING missing from config");
+        _managedIdentityClientId = configuration["MANAGED_IDENTITY_CLIENT_ID"];
+
+        _cosmosDbEndpoint = configuration["COSMOS_DB_ENDPOINT"]
+            ?? throw new Exception("COSMOS_DB_ENDPOINT missing from config");
+        _cosmosDbKey = configuration["COSMOS_DB_KEY"];
+        _cosmosDbName = configuration["COSMOS_DB_NAME"]
+            ?? throw new Exception("COSMOS_DB_NAME missing from config");
+        _cosmosVehicleContainerName = configuration["COSMOS_VEHICLE_CONTAINER_NAME"]
+            ?? throw new Exception("COSMOS_VEHICLE_CONTAINER_NAME missing from config");
 
         _deviceProvisioningGlobalEndpoint = configuration["DEVICE_PROVISIONING_GLOBAL_ENDPOINT"]
             ?? throw new Exception("DEVICE_PROVISIONING_GLOBAL_ENDPOINT missing from config");
@@ -191,13 +202,19 @@ public class Worker : BackgroundService
         // added. Could add the device to DB from there.
         _logger.LogInformation("Creating device {DeviceId}", deviceId);
 
-        using var conn = new SqlConnection(_sqlConnectionString);
-        await conn.ExecuteAsync(
-            "INSERT INTO [dbo].[Vehicles] ([Id], [CreatedAt]) VALUES (@id, SYSUTCDATETIME())",
-            new
-            {
-                id = deviceId
-            });
+        using var client = _cosmosDbKey is null
+            ? new CosmosClient(_cosmosDbEndpoint, new ManagedIdentityCredential(_managedIdentityClientId))
+            : new CosmosClient(_cosmosDbEndpoint, _cosmosDbKey);
+
+        var container = client.GetContainer(_cosmosDbName, _cosmosVehicleContainerName);
+        await container.CreateItemAsync(new
+        {
+            id = deviceId.ToString(),
+            createdAt = DateTime.UtcNow.ToString("O"),
+        }, new PartitionKey(deviceId.ToString()), new ItemRequestOptions
+        {
+            EnableContentResponseOnWrite = false,
+        });
     }
 
     private static Task SendEventAsync(

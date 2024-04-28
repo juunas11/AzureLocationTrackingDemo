@@ -1,11 +1,10 @@
-using System.Data.Common;
 using System.Text.Json;
 using AzureLocationTracking.Functions.Data;
 using AzureLocationTracking.Messages;
 using Microsoft.ApplicationInsights;
+using Microsoft.Azure.Cosmos.Spatial;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using Microsoft.SqlServer.Types;
 
 namespace AzureLocationTracking.Functions;
 
@@ -34,8 +33,6 @@ public class CheckGeofencesEventFunction
         var log = functionContext.GetLogger<CheckGeofencesEventFunction>();
         var exceptions = new List<Exception>();
         var signalRMessageActions = new List<SignalRMessageAction>();
-
-        await _geofenceRepository.OpenConnectionAsync();
 
         foreach (string eventData in events)
         {
@@ -76,31 +73,26 @@ public class CheckGeofencesEventFunction
         LocationUpdateEvent ev)
     {
         var vehicleId = ev.Id;
-        var location = SqlGeography.Point(ev.Lat, ev.Lng, 4326);
+        var location = new Point(longitude: ev.Lng, latitude: ev.Lat);
 
         var signalRMessageActions = new List<SignalRMessageAction>();
 
-        await using (var transaction = await _geofenceRepository.BeginTransactionAsync())
+        var geofenceEvents = await CheckGeofencesAsync(vehicleId, location, ev.Ts);
+        var longitudeNumber = (int)Math.Floor(ev.Lng);
+        var latitudeNumber = (int)Math.Floor(ev.Lat);
+
+        foreach (var geofenceEvent in geofenceEvents)
         {
-            var geofenceEvents = await CheckGeofencesAsync(vehicleId, location, ev.Ts, transaction);
-            var longitudeNumber = (int)Math.Floor(ev.Lng);
-            var latitudeNumber = (int)Math.Floor(ev.Lat);
-
-            foreach (var geofenceEvent in geofenceEvents)
-            {
-                signalRMessageActions.Add(new SignalRMessageAction(
-                    geofenceEvent.Type == GeofenceEventType.Entry ? "geofenceEntered" : "geofenceExited",
-                    new object[]
-                    {
-                        vehicleId.ToString(),
-                        geofenceEvent.GeofenceId.ToString(),
-                    }
-                ){
-                    GroupName = $"grid:{longitudeNumber}:{latitudeNumber}",
-                });
-            }
-
-            await transaction.CommitAsync();
+            signalRMessageActions.Add(new SignalRMessageAction(
+                geofenceEvent.Type == GeofenceEventType.Entry ? "geofenceEntered" : "geofenceExited",
+                new object[]
+                {
+                    vehicleId.ToString(),
+                    geofenceEvent.GeofenceId,
+                }
+            ){
+                GroupName = $"grid:{longitudeNumber}:{latitudeNumber}",
+            });
         }
 
         return signalRMessageActions;
@@ -108,16 +100,15 @@ public class CheckGeofencesEventFunction
 
     private async Task<List<GeofenceEvent>> CheckGeofencesAsync(
         Guid vehicleId,
-        SqlGeography location,
-        DateTime eventTimestamp,
-        DbTransaction transaction)
+        Point location,
+        DateTime eventTimestamp)
     {
-        var (enteredGeofenceIds, exitedGeofenceIds) = await _geofenceRepository
-            .GetEnteredAndExitedGeofenceIdsAsync(vehicleId, location, eventTimestamp, transaction);
+        var (enteredGeofenceIds, geofenceEventsToMarkAsExited) = await _geofenceRepository
+            .GetEnteredAndExitedGeofenceIdsAsync(vehicleId, location, eventTimestamp);
 
-        await _geofenceRepository.AddVehicleInGeofencesAsync(vehicleId, enteredGeofenceIds, eventTimestamp, transaction);
+        await _geofenceRepository.AddVehicleInGeofencesAsync(vehicleId, enteredGeofenceIds, eventTimestamp);
 
-        await _geofenceRepository.SetVehicleOutOfGeofencesAsync(vehicleId, exitedGeofenceIds, eventTimestamp, transaction);
+        await _geofenceRepository.SetVehicleOutOfGeofencesAsync(vehicleId, geofenceEventsToMarkAsExited, eventTimestamp);
 
         return enteredGeofenceIds
             .Select(id => new GeofenceEvent
@@ -125,11 +116,11 @@ public class CheckGeofencesEventFunction
                 Type = GeofenceEventType.Entry,
                 GeofenceId = id,
             })
-            .Concat(exitedGeofenceIds
-                .Select(id => new GeofenceEvent
+            .Concat(geofenceEventsToMarkAsExited
+                .Select(e => new GeofenceEvent
                 {
                     Type = GeofenceEventType.Exit,
-                    GeofenceId = id,
+                    GeofenceId = e.GeofenceId,
                 }))
             .ToList();
     }
@@ -137,7 +128,7 @@ public class CheckGeofencesEventFunction
     internal class GeofenceEvent
     {
         public GeofenceEventType Type { get; set; }
-        public int GeofenceId { get; set; }
+        public Guid GeofenceId { get; set; }
     }
 
     internal enum GeofenceEventType

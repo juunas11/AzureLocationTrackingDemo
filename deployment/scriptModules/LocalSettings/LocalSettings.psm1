@@ -10,11 +10,16 @@ function Show-ContainerLocalSettings {
     $appInsightsConnectionString = $mainBicepOutputs.appInsightsConnectionString.value
     $deviceProvisioningServiceGlobalEndpoint = $mainBicepOutputs.deviceProvisioningServiceGlobalEndpoint.value
     $deviceProvisioningServiceIdScope = $mainBicepOutputs.deviceProvisioningServiceIdScope.value
+    $cosmosDatabaseName = $mainBicepOutputs.cosmosDatabaseName.value
+    $cosmosVehicleContainerName = $mainBicepOutputs.cosmosVehicleContainerName.value
 
     Write-Host "User secrets needed to run AzureLocationTracking.VehicleSimulator locally:"
     $vehicleSimulatorSecrets = @{
-        SQL_CONNECTION_STRING                 = "<your-local-sql-db-connection-string>"
         ENVIRONMENT                           = "dev"
+        COSMOS_DB_ENDPOINT                    = "https://localhost:8081"
+        COSMOS_DB_KEY                         = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+        COSMOS_DB_NAME                        = $cosmosDatabaseName
+        COSMOS_VEHICLE_CONTAINER_NAME         = $cosmosVehicleContainerName
         APPLICATIONINSIGHTS_CONNECTION_STRING = $appInsightsConnectionString
         DEVICE_PROVISIONING_PRIMARY_KEY       = $devEnrollmentGroupPrimaryKey
         DEVICE_PROVISIONING_GLOBAL_ENDPOINT   = $deviceProvisioningServiceGlobalEndpoint
@@ -52,6 +57,10 @@ function Show-FunctionLocalSettings {
     $iotHubHostName = $mainBicepOutputs.iotHubHostName.value
     $adxClusterUri = $mainBicepOutputs.adxClusterUri.value
     $devAdxDbName = $mainBicepOutputs.devAdxDbName.value
+    $cosmosDatabaseName = $mainBicepOutputs.cosmosDatabaseName.value
+    $cosmosVehicleContainerName = $mainBicepOutputs.cosmosVehicleContainerName.value
+    $cosmosVehiclesInGeofencesContainerName = $mainBicepOutputs.cosmosVehiclesInGeofencesContainerName.value
+    $cosmosGeofenceContainerName = $mainBicepOutputs.cosmosGeofenceContainerName.value
 
     $devEventHubConnectionString = az eventhubs eventhub authorization-rule keys list `
         --subscription $subscriptionId -g $resourceGroup --namespace-name $eventHubNamespaceName `
@@ -66,7 +75,6 @@ function Show-FunctionLocalSettings {
     $functionsSettings = @{
         IsEncrypted = $false
         Values      = @{
-            SqlConnectionString                   = "<your-local-sql-db-connection-string>"
             AzureWebJobsStorage                   = "UseDevelopmentStorage=True"
             FUNCTIONS_WORKER_RUNTIME              = "dotnet-isolated"
             EventHubName                          = $devLocationDataEventHubName
@@ -82,6 +90,12 @@ function Show-FunctionLocalSettings {
             IotHubHostName                        = $iotHubHostName
             AdxClusterUri                         = $adxClusterUri
             AdxDbName                             = $devAdxDbName
+            CosmosEndpoint                        = "https://localhost:8081"
+            CosmosKey                             = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+            CosmosDatabase                        = $cosmosDatabaseName
+            CosmosVehicleContainer                = $cosmosVehicleContainerName
+            CosmosVehiclesInGeofencesContainer    = $cosmosVehiclesInGeofencesContainerName
+            CosmosGeofenceContainer               = $cosmosGeofenceContainerName
         }
     } | ConvertTo-Json
     Write-Host $functionsSettings

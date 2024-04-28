@@ -31,8 +31,6 @@ public class VehicleApiFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/vehicles/{vehicleId}/geofenceEvents")] HttpRequestData req,
         Guid vehicleId)
     {
-        await _vehicleRepository.OpenConnectionAsync();
-
         var geofenceEvents = await _vehicleRepository.GetLatestGeofenceEvents(vehicleId);
 
         var res = req.CreateResponse(HttpStatusCode.OK);

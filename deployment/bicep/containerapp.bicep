@@ -4,8 +4,9 @@ param location string = resourceGroup().location
 param containerRegistryName string
 param containerAppEnvironmentName string
 param containerAppIdentityName string
-param sqlServerFqdn string
-param sqlDbName string
+param cosmosAccountName string
+param cosmosDatabaseName string
+param cosmosVehicleContainerName string
 param appInsightsConnectionString string
 param deviceProvisioningServiceGlobalEndpoint string
 param deviceProvisioningServiceIdScope string
@@ -35,6 +36,10 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2021-09-01' e
 
 resource containerAppIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' existing = {
   name: containerAppIdentityName
+}
+
+resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' existing = {
+  name: cosmosAccountName
 }
 
 resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
@@ -84,6 +89,10 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
               value: string(simulatedDeviceCount)
             }
             {
+              name: 'MANAGED_IDENTITY_CLIENT_ID'
+              value: containerAppIdentity.properties.clientId
+            }
+            {
               name: 'DEVICE_PROVISIONING_PRIMARY_KEY'
               secretRef: 'dps-enrollment-group-primary-key'
             }
@@ -96,8 +105,16 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
               value: deviceProvisioningServiceIdScope
             }
             {
-              name: 'SQL_CONNECTION_STRING'
-              value: 'Server=${sqlServerFqdn}; Authentication=Active Directory Managed Identity; Encrypt=True; User Id=${containerAppIdentity.properties.clientId}; Database=${sqlDbName}'
+              name: 'COSMOS_DB_ENDPOINT'
+              value: cosmosAccount.properties.documentEndpoint
+            }
+            {
+              name: 'COSMOS_DB_NAME'
+              value: cosmosDatabaseName
+            }
+            {
+              name: 'COSMOS_VEHICLE_CONTAINER_NAME'
+              value: cosmosVehicleContainerName
             }
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'

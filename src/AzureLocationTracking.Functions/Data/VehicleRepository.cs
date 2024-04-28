@@ -1,46 +1,70 @@
-﻿using Dapper;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using Microsoft.SqlServer.Types;
-using System.Data.Common;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Spatial;
 
 namespace AzureLocationTracking.Functions.Data;
 
-public class VehicleRepository : RepositoryBase
+public class VehicleRepository
 {
-    public VehicleRepository(IConfiguration configuration)
-        : base(configuration)
+    private readonly CosmosClientWrapper _cosmosClientWrapper;
+    private readonly TelemetryClient _telemetryClient;
+
+    public VehicleRepository(
+        CosmosClientWrapper cosmosClientWrapper,
+        TelemetryClient telemetryClient)
     {
+        _cosmosClientWrapper = cosmosClientWrapper;
+        _telemetryClient = telemetryClient;
     }
 
     public async Task UpdateLatestLocationAsync(
         Guid vehicleId,
-        SqlGeography location,
-        DbTransaction transaction)
+        Point location)
     {
-        await SqlConnection.ExecuteAsync(
-            @"UPDATE [dbo].[Vehicles]
-              SET [LatestLocation] = @location
-              WHERE [Id] = @id",
-            new
+        var response = await _cosmosClientWrapper.VehicleContainer.PatchItemAsync<VehicleDto>(
+            vehicleId.ToString(),
+            new PartitionKey(vehicleId.ToString()),
+            new List<PatchOperation>
             {
-                id = vehicleId,
-                location,
+                PatchOperation.Set("/latestLocation", location)
             },
-            transaction);
+            new PatchItemRequestOptions
+            {
+                EnableContentResponseOnWrite = false,
+            });
+
+        var requestUnitsUsed = response.RequestCharge;
+        _telemetryClient.GetMetric("Cosmos RU usage", "Method")
+        .TrackValue(requestUnitsUsed, nameof(UpdateLatestLocationAsync));
     }
 
-    public async Task<IEnumerable<GeofenceEventDto>> GetLatestGeofenceEvents(Guid vehicleId)
+    public async Task<IEnumerable<LatestGeofenceEventDto>> GetLatestGeofenceEvents(Guid vehicleId)
     {
-        var geofenceEvents = await SqlConnection.QueryAsync<GeofenceEventDto>(
-            @"SELECT TOP 5 [GeofenceId], [EntryTimestamp], [ExitTimestamp]
-              FROM [dbo].[VehiclesInGeofences]
-              WHERE [VehicleId] = @vehicleId
-              ORDER BY [EntryTimestamp] DESC",
-            new
-            {
-                vehicleId,
-            });
-        return geofenceEvents;
+        var queryDef = new QueryDefinition("""
+            SELECT TOP 5 c.geofenceId, c.entryTimestamp, c.exitTimestamp
+            FROM c
+            WHERE c.vehicleId = @vehicleId
+            ORDER BY c.entryTimestamp DESC
+            """)
+            .WithParameter("@vehicleId", vehicleId);
+        var iterator = _cosmosClientWrapper.VehiclesInGeofencesContainer.GetItemQueryIterator<LatestGeofenceEventDto>(queryDef, requestOptions: new QueryRequestOptions
+        {
+            PartitionKey = new PartitionKey(vehicleId.ToString()),
+            ConsistencyLevel = ConsistencyLevel.Session,
+        });
+
+        var results = new List<LatestGeofenceEventDto>();
+        while (iterator.HasMoreResults)
+        {
+            var response = await iterator.ReadNextAsync();
+
+            var requestUnitsUsed = response.RequestCharge;
+            _telemetryClient.GetMetric("Cosmos RU usage", "Method")
+                .TrackValue(requestUnitsUsed, nameof(GetLatestGeofenceEvents));
+
+            results.AddRange(response);
+        }
+
+        return results;
     }
 }

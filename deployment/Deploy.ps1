@@ -9,7 +9,7 @@ Import-Module (Join-Path $PSScriptRoot scriptModules\Frontend) -Force
 Import-Module (Join-Path $PSScriptRoot scriptModules\Functions) -Force
 Import-Module (Join-Path $PSScriptRoot scriptModules\Initialization) -Force
 Import-Module (Join-Path $PSScriptRoot scriptModules\LocalSettings) -Force
-Import-Module (Join-Path $PSScriptRoot scriptModules\Sql) -Force
+Import-Module (Join-Path $PSScriptRoot scriptModules\Cosmos) -Force
 
 # This script requires AZ CLI
 
@@ -42,9 +42,8 @@ $dpsKeys = Set-DpsEnrollmentGroups -config $config -mainBicepOutputs $mainBicepO
 $prodEnrollmentGroupPrimaryKey = $dpsKeys.prodEnrollmentGroupPrimaryKey
 $devEnrollmentGroupPrimaryKey = $dpsKeys.devEnrollmentGroupPrimaryKey
 
-Initialize-Sql -config $config -mainBicepOutputs $mainBicepOutputs `
-    -updateSchemaSqlPath (Join-Path $PSScriptRoot sql\updateSchema.sql) `
-    -seedSqlPath (Join-Path $PSScriptRoot sql\seed.sql)
+Initialize-Cosmos -config $config -mainBicepOutputs $mainBicepOutputs `
+    -cosmosInitializerFolder (Join-Path $PSScriptRoot ..\src\AzureLocationTracking.CosmosInitializer -Resolve)
 
 Invoke-AdxSetupScript -mainBicepOutputs $mainBicepOutputs -setupScriptPath (Join-Path $PSScriptRoot adx\adx_setup.csl)
 

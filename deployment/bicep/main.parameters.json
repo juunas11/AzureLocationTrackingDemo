@@ -41,11 +41,14 @@
     "signalRCapacity": {
       "value": 1
     },
-    "sqlDbSku": {
-      "value": "S3"
+    "vehicleContainerThroughput": {
+      "value": 1000
     },
-    "sqlDbCapacity": {
-      "value": 100
+    "geofenceContainerThroughput": {
+      "value": 1000
+    },
+    "vehiclesInGeofencesContainerThroughput": {
+      "value": 1000
     }
   }
 }

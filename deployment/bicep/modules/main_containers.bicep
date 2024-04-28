@@ -5,10 +5,14 @@ param acrPushUserId string
 param eventHubNamespaceName string
 param prodLocationDataEventHubName string
 param logAnalyticsWorkspaceName string
+param cosmosAccountName string
+param cosmosDatabaseName string
+param cosmosVehicleContainerName string
 
 var acrPullRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 var acrPushRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')
 var eventHubSenderRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2b629674-e913-4c01-ae53-ef4638d8f975')
+var cosmosContributorRoleDefinitionId = '00000000-0000-0000-0000-000000000002'
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' existing = {
   name: eventHubNamespaceName
@@ -21,6 +25,20 @@ resource prodLocationDataEventHub 'Microsoft.EventHub/namespaces/eventhubs@2021-
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logAnalyticsWorkspaceName
+}
+
+resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' existing = {
+  name: cosmosAccountName
+}
+
+resource cosmosDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2023-11-15' existing = {
+  parent: cosmosAccount
+  name: cosmosDatabaseName
+}
+
+resource cosmosVehicleContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2023-11-15' existing = {
+  parent: cosmosDatabase
+  name: cosmosVehicleContainerName
 }
 
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = {
@@ -82,6 +100,25 @@ resource containerAppEventHubSenderRoleAssignment 'Microsoft.Authorization/roleA
     roleDefinitionId: eventHubSenderRoleDefinitionId
     principalId: containerAppIdentity.properties.principalId
     principalType: 'ServicePrincipal'
+  }
+}
+
+resource containerAppCosmosContributorRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2023-11-15' = {
+  name: guid(cosmosVehicleContainer.id, containerAppIdentity.id, cosmosContributorRoleDefinitionId)
+  parent: cosmosAccount
+  properties: {
+    principalId: containerAppIdentity.properties.principalId
+    roleDefinitionId: resourceId(
+      'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions',
+      cosmosAccount.name,
+      cosmosContributorRoleDefinitionId
+    )
+    scope: resourceId(
+      'Microsoft.DocumentDB/databaseAccounts/dbs/colls',
+      cosmosAccount.name,
+      cosmosDatabase.name,
+      cosmosVehicleContainer.name
+    )
   }
 }
 

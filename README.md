@@ -10,7 +10,7 @@ Azure services used:
 - Function App
 - SignalR Service
 - Azure Maps
-- Azure SQL DB
+- Cosmos DB
 - Container App
 - Container Registry
 - Application Insights
@@ -45,13 +45,7 @@ Then fill in at least these settings:
   - Azure region where resources will be deployed to (e.g. westeurope)
 - developerUserId
   - Your user object ID in the Entra ID (Azure AD) tenant where resources are deployed to
-  - Used to assign container registry push, SQL admin, Maps reader, ADX admin, and IotHub Twin contributor rights
-- developerUsername
-  - Your user name in the Entra ID (Azure AD) tenant where resources are deployed to
-  - Used to assign SQL admin username
-- developerIpAddress
-  - Your IP address
-  - Traffic from this URL is allowed into SQL DB
+  - Used to assign container registry push, Cosmos read/write, Maps reader, ADX admin, and IotHub Twin contributor rights
 - adApplicationTenantId
   - Entra ID (Azure AD) tenant ID where an app registration is setup for the Function App
   - This app registration enables logging in to the front-end; logged in users can modify device parameters
@@ -95,7 +89,7 @@ Prerequisites:
 - Run the deployment script
 - Azurite
 - Ngrok
-- SQL database
+- [Cosmos DB emulator](https://learn.microsoft.com/en-us/azure/cosmos-db/emulator)
 - Ability to run .NET Azure Functions (.NET 8)
 - Node.js (tested with 20.11.1)
 
@@ -106,7 +100,8 @@ From the deployment script outputs, you should get the necessary user secrets to
 - AzureLocationTracking.VehicleSimulator
   - Device simulator that sends events to IoT Hub, which then get forwarded to the Function App
 
-Note that the SQL database connection string is missing from these, you will need to specify one yourself.
+The output uses the default URI and key for Cosmos DB emulator.
+Change those if needed for your environment.
 
 You will also need to run:
 
@@ -154,7 +149,7 @@ The IoT Hub device twin for each device has an environment tag, that is used in 
 The Event Hubs have three listeners: Azure Data Explorer, geofence update function, and location update function.
 ADX writes all events to a table.
 The geofence update function checks if the new location puts the vehicle inside a geofence it wasn't already in, and fires an event through SignalR for it.
-The location update function updates the latest location for the vehicle in the SQL database and fires an event through SignalR.
+The location update function updates the latest location for the vehicle in Cosmos DB and fires an event through SignalR.
 
 The Vue front-end's files are deployed inside the Function App and it returns the index.html file when you hit the root of the Function App.
 The front-end then connects to the Function App for a SignalR connection, which gets forwarded to SignalR Service.

@@ -2,9 +2,7 @@ param location string = resourceGroup().location
 
 // Parameters from command line
 param acrPushUserId string
-param sqlAdminUserId string
-param sqlAdminUsername string
-param sqlFirewallAllowedIpAddress string
+param cosmosContributorUserId string
 param mapsReaderUserId string
 param adxAdminUserId string
 param functionsAdAppTenantId string
@@ -32,8 +30,9 @@ param adxSkuTier string
 param adxCapacity int
 param signalRSku string
 param signalRCapacity int
-param sqlDbSku string
-param sqlDbCapacity int
+param vehicleContainerThroughput int
+param geofenceContainerThroughput int
+param vehiclesInGeofencesContainerThroughput int
 
 var appName = 'locationtracking'
 var namingSuffix = uniqueString(resourceGroup().id)
@@ -45,6 +44,11 @@ var naming = {
   containerAppEnvironment: 'cae-${appName}-${namingSuffix}'
   containerAppIdentity: 'ca-id-${appName}-${namingSuffix}'
   containerRegistry: 'cr${appName}${namingSuffix}'
+  cosmosAccount: 'cosmos-${appName}-${namingSuffix}'
+  cosmosDatabase: 'LocationDataDb'
+  cosmosGeofenceContainer: 'Geofences'
+  cosmosVehicleContainer: 'Vehicles'
+  cosmosVehiclesInGeofencesContainer: 'VehiclesInGeofences'
   deviceProvisioningService: 'dps-${appName}-${namingSuffix}'
   eventHubConsumerGroupAdx: 'azureDataExplorer'
   eventHubConsumerGroupGeofenceCheck: 'geofenceCheck'
@@ -62,8 +66,6 @@ var naming = {
   logAnalytics: 'log-${appName}-${namingSuffix}'
   mapsAccount: 'maps-${appName}-${namingSuffix}'
   signalR: 'sig-${appName}-${namingSuffix}'
-  sqlDb: 'LocationDataDb'
-  sqlServer: 'sql-${appName}-${namingSuffix}'
 }
 
 module eventHub 'modules/main_eventhub.bicep' = {
@@ -136,19 +138,21 @@ module containers 'modules/main_containers.bicep' = {
     eventHubNamespaceName: eventHub.outputs.namespaceName
     prodLocationDataEventHubName: eventHub.outputs.prodEventHubName
     logAnalyticsWorkspaceName: logging.outputs.logAnalyticsWorkspaceName
+    cosmosAccountName: cosmos.outputs.accountName
+    cosmosDatabaseName: cosmos.outputs.databaseName
+    cosmosVehicleContainerName: cosmos.outputs.vehicleContainerName
   }
 }
 
-module sql 'modules/main_sql.bicep' = {
-  name: '${deployment().name}-sql'
+module cosmos 'modules/main_cosmos.bicep' = {
+  name: '${deployment().name}-cosmos'
   params: {
     location: location
     naming: naming
-    sqlDbSku: sqlDbSku
-    sqlDbCapacity: sqlDbCapacity
-    sqlAdminUserId: sqlAdminUserId
-    sqlAdminUsername: sqlAdminUsername
-    sqlFirewallAllowedIpAddress: sqlFirewallAllowedIpAddress
+    cosmosContributorUserId: cosmosContributorUserId
+    vehicleContainerThroughput: vehicleContainerThroughput
+    geofenceContainerThroughput: geofenceContainerThroughput
+    vehiclesInGeofencesContainerThroughput: vehiclesInGeofencesContainerThroughput
   }
 }
 
@@ -192,8 +196,7 @@ module functions 'modules/main_functions.bicep' = {
     appInsightsName: logging.outputs.appInsightsName
     iotHubName: iotHub.outputs.name
     mapsAccountName: maps.outputs.name
-    sqlServerName: sql.outputs.serverName
-    sqlDbName: sql.outputs.dbName
+    cosmosAccountName: cosmos.outputs.accountName
   }
 }
 
@@ -211,9 +214,12 @@ output containerRegistryName string = containers.outputs.containerRegistryName
 output containerAppEnvironmentName string = containers.outputs.containerAppEnvironmentName
 output containerAppIdentityName string = containers.outputs.containerAppIdentityName
 output logAnalyticsWorkspaceName string = logging.outputs.logAnalyticsWorkspaceName
-output sqlServerName string = sql.outputs.serverName
-output sqlServerFqdn string = sql.outputs.serverFqdn
-output sqlDbName string = sql.outputs.dbName
+output cosmosAccountName string = cosmos.outputs.accountName
+output cosmosAccountEndpoint string = cosmos.outputs.accountEndpoint
+output cosmosDatabaseName string = cosmos.outputs.databaseName
+output cosmosGeofenceContainerName string = cosmos.outputs.geofenceContainerName
+output cosmosVehicleContainerName string = cosmos.outputs.vehicleContainerName
+output cosmosVehiclesInGeofencesContainerName string = cosmos.outputs.vehiclesInGeofencesContainerName
 output functionsAppName string = functions.outputs.appName
 output functionsAppIdentityName string = functions.outputs.appSystemAssignedIdentityName
 output functionsAppHostName string = functions.outputs.appHostName

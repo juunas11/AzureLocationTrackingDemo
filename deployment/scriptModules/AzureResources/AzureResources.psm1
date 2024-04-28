@@ -156,8 +156,6 @@ function Deploy-MainTemplate {
     $subscriptionId = $config.subscriptionId
     $resourceGroup = $config.resourceGroup
     $developerUserId = $config.developerUserId
-    $developerUsername = $config.developerUsername
-    $developerIpAddress = $config.developerIpAddress
     $adApplicationTenantId = $config.adApplicationTenantId
     $prodSignalRHubName = $config.prodSignalRHubName
     $devSignalRHubName = $config.devSignalRHubName
@@ -169,8 +167,8 @@ function Deploy-MainTemplate {
     Write-Host "Running main.bicep deployment..."
     $mainBicepResult = az deployment group create --subscription "$subscriptionId" -g "$resourceGroup" -f "main.bicep" -n "$deploymentNamePrefix-Main" --mode "Incremental" `
         -p "@main.parameters.json" `
-        -p acrPushUserId=$developerUserId sqlAdminUserId=$developerUserId mapsReaderUserId=$developerUserId adxAdminUserId=$developerUserId `
-        -p sqlAdminUsername=$developerUsername sqlFirewallAllowedIpAddress=$developerIpAddress `
+        -p acrPushUserId=$developerUserId mapsReaderUserId=$developerUserId adxAdminUserId=$developerUserId `
+        -p cosmosContributorUserId=$developerUserId `
         -p functionsAdAppTenantId=$adApplicationTenantId functionsAdAppClientId=$adAppClientId functionsAdAppScope=$adApplicationScopeIdentifier `
         -p iotHubTwinContributorUserId=$developerUserId `
         -p prodSignalRUpstreamUrl=$prodSignalRUpstreamUrl devSignalRUpstreamUrl=$devSignalRUpstreamUrl `
@@ -264,15 +262,17 @@ function Deploy-ContainerAppTemplate {
     $appInsightsConnectionString = $mainBicepOutputs.appInsightsConnectionString.value
     $deviceProvisioningServiceGlobalEndpoint = $mainBicepOutputs.deviceProvisioningServiceGlobalEndpoint.value
     $deviceProvisioningServiceIdScope = $mainBicepOutputs.deviceProvisioningServiceIdScope.value
-    $sqlServerFqdn = $mainBicepOutputs.sqlServerFqdn.value
-    $sqlDbName = $mainBicepOutputs.sqlDbName.value
+    $cosmosAccountName = $mainBicepOutputs.cosmosAccountName.value
+    $cosmosDatabaseName = $mainBicepOutputs.cosmosDatabaseName.value
+    $cosmosVehicleContainerName = $mainBicepOutputs.cosmosVehicleContainerName.value
 
     Write-Host "Running containerapp.bicep deployment..."
     $containerAppBicepResult = az deployment group create --subscription "$subscriptionId" -g "$resourceGroup" -f "containerapp.bicep" -n "$deploymentNamePrefix-ContainerApp" --mode "Incremental" `
         -p "@containerapp.parameters.json" `
         -p containerAppEnvironmentName=$containerAppEnvironmentName containerRegistryName=$containerRegistryName containerAppIdentityName=$containerAppIdentityName `
         -p deviceProvisioningServiceGlobalEndpoint=$deviceProvisioningServiceGlobalEndpoint deviceProvisioningServiceIdScope=$deviceProvisioningServiceIdScope `
-        -p dpsEnrollmentGroupPrimaryKey=$prodEnrollmentGroupPrimaryKey sqlServerFqdn=$sqlServerFqdn sqlDbName=$sqlDbName appInsightsConnectionString=$appInsightsConnectionString | ConvertFrom-Json
+        -p cosmosAccountName=$cosmosAccountName cosmosDatabaseName=$cosmosDatabaseName cosmosVehicleContainerName=$cosmosVehicleContainerName `
+        -p dpsEnrollmentGroupPrimaryKey=$prodEnrollmentGroupPrimaryKey appInsightsConnectionString=$appInsightsConnectionString | ConvertFrom-Json
     if ($LASTEXITCODE -ne 0) {
         Pop-Location
         throw "Failed to deploy containerapp.bicep."
@@ -308,8 +308,7 @@ function Deploy-DashboardTemplate {
     $containerAppName = $containerAppBicepOutputs.containerAppName.value
     $appInsightsName = $mainBicepOutputs.appInsightsName.value
     $signalRName = $mainBicepOutputs.signalRName.value
-    $sqlServerName = $mainBicepOutputs.sqlServerName.value
-    $sqlDbName = $mainBicepOutputs.sqlDbName.value
+    $cosmosAccountName = $mainBicepOutputs.cosmosAccountName.value
     $eventHubNamespaceName = $mainBicepOutputs.eventHubNamespaceName.value
     $prodLocationDataEventHubName = $mainBicepOutputs.prodLocationDataEventHubName.value
     $iotHubName = $mainBicepOutputs.iotHubName.value
@@ -320,9 +319,9 @@ function Deploy-DashboardTemplate {
     az deployment group create --subscription "$subscriptionId" -g "$resourceGroup" -f "dashboard.bicep" -n "$deploymentNamePrefix-Dashboard" --mode "Incremental" `
         -p "@dashboard.parameters.json" `
         -p containerAppName=$containerAppName appInsightsName=$appInsightsName signalRName=$signalRName `
-        -p sqlServerName=$sqlServerName sqlDbName=$sqlDbName `
         -p eventHubNamespaceName=$eventHubNamespaceName prodLocationDataEventHubName=$prodLocationDataEventHubName `
-        -p iotHubName=$iotHubName adxClusterName=$adxClusterName | Out-Null
+        -p iotHubName=$iotHubName adxClusterName=$adxClusterName `
+        -p cosmosAccountName=$cosmosAccountName | Out-Null
 
     if ($LASTEXITCODE -ne 0) {
         Pop-Location
