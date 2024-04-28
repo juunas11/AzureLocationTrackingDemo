@@ -3,19 +3,21 @@ import { updateGridBoundsAsync } from "@/services/mapGrid";
 import { getMapsAccessToken } from "@/api/mapsToken";
 import { getPastLocations } from "@/api/pastLocations";
 import { useSidebarStore } from "@/stores/sidebar";
+import { useGeofenceStore } from "@/stores/geofence";
 import * as atlas from "azure-maps-control";
 import { onMounted, onUnmounted, watch } from 'vue';
 import { emitter, type Events } from "@/services/eventBus";
 
 const sidebarStore = useSidebarStore();
+const geofenceStore = useGeofenceStore();
 
 let map: atlas.Map | null = null;
 const geofenceDataSource = new atlas.source.DataSource();
 let geofencePopup: atlas.Popup | null = null;
 const pastLocationsLineDataSource = new atlas.source.DataSource();
 const pastLocationsPointsDataSource = new atlas.source.DataSource();
-const locationTrackerDataSource = new atlas.source.DataSource();
-let locationTrackerPopup: atlas.Popup | null = null;
+const vehicleDataSource = new atlas.source.DataSource();
+let vehiclePopup: atlas.Popup | null = null;
 let carSpriteReady = false;
 let cleanupIntervalId: number | null = null;
 
@@ -24,6 +26,11 @@ watch(() => sidebarStore.isOpen, (isOpen) => {
     pastLocationsLineDataSource.clear();
     pastLocationsPointsDataSource.clear();
   }
+});
+
+watch(() => geofenceStore.geofences, (geofences) => {
+  geofenceDataSource.clear();
+  geofenceDataSource.add(geofences);
 });
 
 function onGeofenceHover(e: atlas.MapMouseEvent) {
@@ -39,7 +46,7 @@ function onGeofenceHover(e: atlas.MapMouseEvent) {
   //Update the content and position of the popup.
   geofencePopup!.setOptions({
     //Create the content of the popup.
-    content: `<div style="padding:10px;"><b>Geofence ${id}</b></div>`,
+    content: `<div style="padding:10px;"><b>Geofence ${properties.name} (${id})</b></div>`,
     position: properties.center,
     pixelOffset: [0, -18]
   });
@@ -49,11 +56,11 @@ function onGeofenceHover(e: atlas.MapMouseEvent) {
 }
 
 function closePopups() {
-  locationTrackerPopup!.close();
+  vehiclePopup!.close();
   geofencePopup!.close();
 }
 
-function onLocationTrackerHover(e: atlas.MapMouseEvent) {
+function onVehicleHover(e: atlas.MapMouseEvent) {
   //Make sure the event occurred on a shape feature.
   if (!e.shapes || e.shapes.length == 0) {
     return;
@@ -63,7 +70,7 @@ function onLocationTrackerHover(e: atlas.MapMouseEvent) {
   const properties = shape.getProperties();
 
   //Update the content and position of the popup.
-  locationTrackerPopup!.setOptions({
+  vehiclePopup!.setOptions({
     //Create the content of the popup.
     content: `<div style="padding:10px;"><b>${properties.name}</b><br/><span>${properties.speed?.toFixed(0) ?? '-'} km/h</span></div>`,
     position: shape.getCoordinates() as atlas.data.Position,
@@ -71,10 +78,10 @@ function onLocationTrackerHover(e: atlas.MapMouseEvent) {
   });
 
   //Open the popup.
-  locationTrackerPopup!.open(map!);
+  vehiclePopup!.open(map!);
 }
 
-function onLocationTrackerClick(e: atlas.MapMouseEvent) {
+function onVehicleClick(e: atlas.MapMouseEvent) {
   if (!e.shapes || e.shapes.length == 0) {
     return;
   }
@@ -89,22 +96,22 @@ function onLocationTrackerClick(e: atlas.MapMouseEvent) {
   updatePastLocations(id);
 }
 
-function updatePastLocations(trackerId: string) {
-  getPastLocations(trackerId)
+function updatePastLocations(vehicleId: string) {
+  getPastLocations(vehicleId)
     .then(pastLocations => {
-      if (sidebarStore.selectedTrackerId !== trackerId) {
+      if (sidebarStore.selectedVehicleId !== vehicleId) {
         return;
       }
 
       const line = new atlas.data.LineString(pastLocations.map((l: any) => [l.longitude, l.latitude]));
-      const shape = new atlas.Shape(line, trackerId, {
-        name: 'Tracker: ' + trackerId + ' past locations'
+      const shape = new atlas.Shape(line, vehicleId, {
+        name: 'Vehicle: ' + vehicleId + ' past locations'
       });
       pastLocationsLineDataSource.add(shape);
 
       for (const location of pastLocations) {
         const point = new atlas.data.Point([location.longitude, location.latitude]);
-        const pointShape = new atlas.Shape(point, trackerId + ':' + location.timestamp, {
+        const pointShape = new atlas.Shape(point, vehicleId + ':' + location.timestamp, {
           name: new Date(location.timestamp).toLocaleString()
         });
         pastLocationsPointsDataSource.add(pointShape);
@@ -114,8 +121,8 @@ function updatePastLocations(trackerId: string) {
 
 function initMap() {
   const newMap = new atlas.Map("myMap", {
-    center: [24.940806, 60.170218],
-    zoom: 14,
+    center: [4.420184988709366, 51.229767869110844],
+    zoom: 13,
     view: "Auto",
     authOptions: {
       authType: "anonymous" as any,
@@ -152,13 +159,13 @@ function initMap() {
     );
     newMap.layers.add(pastLocationsPointsLayer);
 
-    newMap.sources.add(locationTrackerDataSource);
+    newMap.sources.add(vehicleDataSource);
 
     newMap.imageSprite
       .createFromTemplate("car", "car", "teal", "#fff", 1)
       .then(function () {
-        const locationTrackerLayer = new atlas.layer.SymbolLayer(
-          locationTrackerDataSource,
+        const vehicleLayer = new atlas.layer.SymbolLayer(
+          vehicleDataSource,
           undefined,
           {
             iconOptions: {
@@ -171,34 +178,33 @@ function initMap() {
             },
           }
         );
-        newMap.layers.add(locationTrackerLayer);
+        newMap.layers.add(vehicleLayer);
 
         newMap.events.add(
           "mousemove",
-          locationTrackerLayer,
-          onLocationTrackerHover
+          vehicleLayer,
+          onVehicleHover
         );
         newMap.events.add(
           "touchstart",
-          locationTrackerLayer,
-          onLocationTrackerHover
+          vehicleLayer,
+          onVehicleHover
         );
         newMap.events.add(
           "click",
-          locationTrackerLayer,
-          onLocationTrackerClick
+          vehicleLayer,
+          onVehicleClick
         );
 
         carSpriteReady = true;
       });
 
-    geofenceDataSource.importDataFromUrl("/api/geofences");
     geofencePopup = new atlas.Popup({
       position: [0, 0],
       pixelOffset: [0, -18],
     });
 
-    locationTrackerPopup = new atlas.Popup({
+    vehiclePopup = new atlas.Popup({
       position: [0, 0],
       pixelOffset: [0, -18],
     });
@@ -237,24 +243,24 @@ function addControls(map: atlas.Map) {
   );
 }
 
-function onLocationTrackerUpdated(tracker: Events['trackerUpdated']) {
+function onVehicleUpdated(vehicle: Events['vehicleUpdated']) {
   if (!carSpriteReady) {
     return;
   }
-  let shape = locationTrackerDataSource.getShapeById(tracker.trackerId);
+  let shape = vehicleDataSource.getShapeById(vehicle.vehicleId);
   if (shape === null || shape === undefined) {
-    shape = new atlas.Shape(tracker.latestLocation, tracker.trackerId, {
-      name: 'Tracker: ' + tracker.trackerId,
-      heading: tracker.heading ?? 0,
-      speed: tracker.speed,
-      eventReceivedTimestamp: tracker.latestEventReceivedTimestamp,
+    shape = new atlas.Shape(vehicle.latestLocation, vehicle.vehicleId, {
+      name: 'Vehicle: ' + vehicle.vehicleId,
+      heading: vehicle.heading ?? 0,
+      speed: vehicle.speed,
+      eventReceivedTimestamp: vehicle.latestEventReceivedTimestamp,
     });
-    locationTrackerDataSource.add(shape);
+    vehicleDataSource.add(shape);
   } else {
-    shape.addProperty('heading', tracker.heading);
-    shape.addProperty('speed', tracker.speed);
-    shape.addProperty('eventReceivedTimestamp', tracker.latestEventReceivedTimestamp);
-    shape.setCoordinates(tracker.latestLocation.coordinates);
+    shape.addProperty('heading', vehicle.heading);
+    shape.addProperty('speed', vehicle.speed);
+    shape.addProperty('eventReceivedTimestamp', vehicle.latestEventReceivedTimestamp);
+    shape.setCoordinates(vehicle.latestLocation.coordinates);
   }
 };
 
@@ -267,22 +273,22 @@ function updateGridBounds() {
   });
 }
 
-function cleanupOldTrackers() {
+function cleanupOldVehicles() {
   const cleanupThresholdMillis = 15000;
   const now = Date.now();
-  const shapes = locationTrackerDataSource.getShapes();
+  const shapes = vehicleDataSource.getShapes();
 
   for (const shape of shapes) {
-    const trackerId = shape.getId() as string;
+    const vehicleId = shape.getId() as string;
     const timestamp = shape.getProperties().eventReceivedTimestamp;
     if ((now - timestamp) > cleanupThresholdMillis) {
-      console.info(`Removing tracker ${trackerId}, its last update was ${now - timestamp} ms ago`);
+      console.info(`Removing vehicle ${vehicleId}, its last update was ${now - timestamp} ms ago`);
 
-      if (sidebarStore.selectedTrackerId === trackerId) {
+      if (sidebarStore.selectedVehicleId === vehicleId) {
         sidebarStore.closeSidebar();
       }
 
-      locationTrackerDataSource.removeById(trackerId);
+      vehicleDataSource.removeById(vehicleId);
     }
   }
 }
@@ -291,9 +297,9 @@ onMounted(() => {
   initMap();
   updateGridBounds();
 
-  emitter.on('trackerUpdated', onLocationTrackerUpdated);
+  emitter.on('vehicleUpdated', onVehicleUpdated);
 
-  cleanupIntervalId = window.setInterval(cleanupOldTrackers, 5000);
+  cleanupIntervalId = window.setInterval(cleanupOldVehicles, 5000);
 });
 onUnmounted(() => {
   if (cleanupIntervalId !== null) {
@@ -301,7 +307,7 @@ onUnmounted(() => {
     cleanupIntervalId = null;
   }
 
-  emitter.off('trackerUpdated', onLocationTrackerUpdated);
+  emitter.off('vehicleUpdated', onVehicleUpdated);
 
   map?.clear();
   map?.dispose();

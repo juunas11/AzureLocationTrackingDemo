@@ -1,22 +1,22 @@
-import type { LocationTrackerState } from "@/stores/locationTracking";
+import type { VehicleState } from "@/stores/vehicle";
 import mitt from "mitt";
 
 export const emitter = mitt<Events>();
 
 export type Events = {
   locationUpdated: {
-    trackerId: string;
+    vehicleId: string;
     latitude: number;
     longitude: number;
     timestamp: number;
   };
   geofenceEntered: {
-    trackerId: string;
+    vehicleId: string;
     geofenceId: number;
   };
   geofenceExited: {
-    trackerId: string;
+    vehicleId: string;
     geofenceId: number;
   };
-  trackerUpdated: LocationTrackerState;
+  vehicleUpdated: VehicleState;
 };

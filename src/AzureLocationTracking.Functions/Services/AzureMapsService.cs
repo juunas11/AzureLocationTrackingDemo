@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace AzureLocationTracking.Functions.Services;
+
 public class AzureMapsService
 {
     private static AccessToken CachedReadToken;

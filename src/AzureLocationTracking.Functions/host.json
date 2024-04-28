@@ -11,6 +11,10 @@
   "extensions": {
     "http": {
       "routePrefix": ""
+    },
+    "eventHubs": {
+      "batchCheckpointFrequency": 1,
+      "prefetchCount": 300
     }
   }
 }

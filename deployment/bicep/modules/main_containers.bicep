@@ -1,5 +1,6 @@
 param location string
 param naming object
+param containerRegistrySku string
 param acrPushUserId string
 param eventHubNamespaceName string
 param prodLocationDataEventHubName string
@@ -40,7 +41,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2021-09-01' =
   name: naming.containerRegistry
   location: location
   sku: {
-    name: 'Basic'
+    name: containerRegistrySku
   }
   properties: {
     adminUserEnabled: false

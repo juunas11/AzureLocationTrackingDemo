@@ -12,12 +12,14 @@ import { getAllAccounts, initialize, setActiveAccount } from '@/services/login';
 import { emitter } from '@/services/eventBus';
 import { useUserStore } from './stores/user';
 import { onMounted, onUnmounted } from 'vue';
-import { useLocationTrackingStore } from './stores/locationTracking';
+import { useVehicleStore } from './stores/vehicle';
+import { useGeofenceStore } from './stores/geofence';
 
 startConnection();
 
 const userStore = useUserStore();
-const locationTrackingStore = useLocationTrackingStore();
+const vehicleStore = useVehicleStore();
+const geofenceStore = useGeofenceStore();
 
 function handleLoginResponse(response: AuthenticationResult | null) {
   if (response !== null && response.account !== null) {
@@ -39,29 +41,30 @@ function setUserSignedIn(account: AccountInfo) {
 
 initialize(handleLoginResponse);
 
-function onLocationUpdated(trackerId: string, latitude: number, longitude: number, timestamp: number) {
-  emitter.emit('locationUpdated', { trackerId, latitude, longitude, timestamp });
+function onLocationUpdated(vehicleId: string, latitude: number, longitude: number, timestamp: number) {
+  emitter.emit('locationUpdated', { vehicleId, latitude, longitude, timestamp });
 }
 
-function onGeofenceEntered(trackerId: string, geofenceId: number) {
-  emitter.emit('geofenceEntered', { trackerId, geofenceId });
+function onGeofenceEntered(vehicleId: string, geofenceId: number) {
+  emitter.emit('geofenceEntered', { vehicleId, geofenceId });
 };
 
-function onGeofenceExited(trackerId: string, geofenceId: number) {
-  emitter.emit('geofenceExited', { trackerId, geofenceId });
+function onGeofenceExited(vehicleId: string, geofenceId: number) {
+  emitter.emit('geofenceExited', { vehicleId, geofenceId });
 };
 
 onMounted(() => {
   connection.on("locationUpdated", onLocationUpdated);
   connection.on("geofenceEntered", onGeofenceEntered);
   connection.on("geofenceExited", onGeofenceExited);
-  locationTrackingStore.subscribeLocationEvents();
+  vehicleStore.subscribeLocationEvents();
+  geofenceStore.loadGeofences();
 });
 onUnmounted(() => {
   connection.off("locationUpdated", onLocationUpdated);
   connection.off("geofenceEntered", onGeofenceEntered);
   connection.off("geofenceExited", onGeofenceExited);
-  locationTrackingStore.unsubsrcibeLocationEvents();
+  vehicleStore.unsubscribeLocationEvents();
 });
 </script>
 

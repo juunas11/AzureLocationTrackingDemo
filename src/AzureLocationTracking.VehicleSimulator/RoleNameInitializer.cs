@@ -1,7 +1,7 @@
 ﻿using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 
-namespace AzureLocationTracking.TrackerDevice;
+namespace AzureLocationTracking.VehicleSimulator;
 
 public class RoleNameInitializer : ITelemetryInitializer
 {
@@ -14,7 +14,7 @@ public class RoleNameInitializer : ITelemetryInitializer
 
     public void Initialize(ITelemetry telemetry)
     {
-        telemetry.Context.Cloud.RoleName = "Tracker device";
+        telemetry.Context.Cloud.RoleName = "Vehicle simulator";
         telemetry.Context.Cloud.RoleInstance = _deviceId.ToString();
     }
 }

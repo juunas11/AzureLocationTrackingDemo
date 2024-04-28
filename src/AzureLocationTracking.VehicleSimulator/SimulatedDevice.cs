@@ -1,6 +1,6 @@
 ﻿using NetTopologySuite.Geometries;
 
-namespace AzureLocationTracking.TrackerDevice;
+namespace AzureLocationTracking.VehicleSimulator;
 internal class SimulatedDevice
 {
     private readonly Coordinate[] _coordinates;
@@ -11,7 +11,7 @@ internal class SimulatedDevice
     private double _speedMetersPerSecond;
 
     public SimulatedDevice(Coordinate[] coordinates)
-	{
+    {
         _coordinates = coordinates;
         _distances = GetDistancesBetweenCoordinates(coordinates);
         // Start at random point on the line
@@ -19,7 +19,7 @@ internal class SimulatedDevice
         _distanceTraveledFromCurrentPoint = 0;
         _lastTickTime = DateTime.UtcNow;
         _speedMetersPerSecond = 0;
-	}
+    }
 
     public Coordinate? Coordinate { get; private set; }
 
@@ -30,7 +30,7 @@ internal class SimulatedDevice
     }
 
     public void Tick()
-	{
+    {
         var now = DateTime.UtcNow;
         var deltaSeconds = (now - _lastTickTime).TotalSeconds;
 

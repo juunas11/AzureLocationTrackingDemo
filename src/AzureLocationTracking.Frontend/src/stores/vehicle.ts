@@ -3,8 +3,8 @@ import { defineStore } from "pinia";
 import * as atlas from "azure-maps-control";
 import { emitter, type Events } from "@/services/eventBus";
 
-export interface LocationTrackerState {
-  trackerId: string;
+export interface VehicleState {
+  vehicleId: string;
   previousLocation: atlas.data.Point | null;
   previousEventSentTimestamp: number | null;
   previousEventReceivedTimestamp: number | null;
@@ -15,19 +15,19 @@ export interface LocationTrackerState {
   speed: number | null;
 }
 
-export const useLocationTrackingStore = defineStore("locationTracking", () => {
-  const trackers = ref<Record<string, LocationTrackerState>>({});
+export const useVehicleStore = defineStore("vehicle", () => {
+  const vehicles = ref<Record<string, VehicleState>>({});
 
   function onLocationUpdated({
-    trackerId,
+    vehicleId,
     latitude,
     longitude,
     timestamp,
   }: Events["locationUpdated"]) {
-    let tracker = trackers.value[trackerId];
-    if (tracker === undefined) {
-      tracker = {
-        trackerId,
+    let vehicle = vehicles.value[vehicleId];
+    if (vehicle === undefined) {
+      vehicle = {
+        vehicleId,
         previousLocation: null,
         previousEventSentTimestamp: null,
         previousEventReceivedTimestamp: null,
@@ -37,52 +37,52 @@ export const useLocationTrackingStore = defineStore("locationTracking", () => {
         heading: null,
         speed: null,
       };
-      trackers.value[trackerId] = tracker;
+      vehicles.value[vehicleId] = vehicle;
     } else {
-      tracker.previousLocation = tracker.latestLocation;
-      tracker.previousEventSentTimestamp = tracker.latestEventSentTimestamp;
-      tracker.previousEventReceivedTimestamp =
-        tracker.latestEventReceivedTimestamp;
-      tracker.latestLocation = new atlas.data.Point([longitude, latitude]);
-      tracker.latestEventSentTimestamp = timestamp;
-      tracker.latestEventReceivedTimestamp = Date.now();
+      vehicle.previousLocation = vehicle.latestLocation;
+      vehicle.previousEventSentTimestamp = vehicle.latestEventSentTimestamp;
+      vehicle.previousEventReceivedTimestamp =
+        vehicle.latestEventReceivedTimestamp;
+      vehicle.latestLocation = new atlas.data.Point([longitude, latitude]);
+      vehicle.latestEventSentTimestamp = timestamp;
+      vehicle.latestEventReceivedTimestamp = Date.now();
 
       const heading = atlas.math.getPixelHeading(
-        tracker.previousLocation,
-        tracker.latestLocation
+        vehicle.previousLocation,
+        vehicle.latestLocation
       );
       const deltaSeconds = atlas.math.getTimespan(
-        tracker.previousEventSentTimestamp,
+        vehicle.previousEventSentTimestamp,
         timestamp,
         atlas.math.TimeUnits.seconds
       );
       const speed = atlas.math.getSpeed(
-        tracker.previousLocation,
-        tracker.latestLocation,
+        vehicle.previousLocation,
+        vehicle.latestLocation,
         deltaSeconds,
         "seconds",
         "kilometersPerHour",
         0
       );
 
-      tracker.heading = heading;
-      tracker.speed = speed;
+      vehicle.heading = heading;
+      vehicle.speed = speed;
     }
 
-    emitter.emit("trackerUpdated", tracker);
+    emitter.emit("vehicleUpdated", vehicle);
   }
 
   function subscribeLocationEvents() {
     emitter.on("locationUpdated", onLocationUpdated);
   }
 
-  function unsubsrcibeLocationEvents() {
+  function unsubscribeLocationEvents() {
     emitter.off("locationUpdated", onLocationUpdated);
   }
 
   return {
-    trackers,
+    vehicles,
     subscribeLocationEvents,
-    unsubsrcibeLocationEvents,
+    unsubscribeLocationEvents,
   };
 });

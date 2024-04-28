@@ -2,20 +2,20 @@ import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 
 export const useSidebarStore = defineStore("sidebar", () => {
-  const selectedTrackerId = ref<string | null>(null);
-  const isOpen = computed(() => selectedTrackerId.value !== null);
+  const selectedVehicleId = ref<string | null>(null);
+  const isOpen = computed(() => selectedVehicleId.value !== null);
 
-  function openSidebar(trackerId: string) {
-    selectedTrackerId.value = trackerId;
+  function openSidebar(vehicleId: string) {
+    selectedVehicleId.value = vehicleId;
   }
 
   function closeSidebar() {
-    selectedTrackerId.value = null;
+    selectedVehicleId.value = null;
   }
 
   return {
     isOpen,
-    selectedTrackerId,
+    selectedVehicleId,
     closeSidebar,
     openSidebar,
   };

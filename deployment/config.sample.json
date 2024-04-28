@@ -1,15 +1,15 @@
 {
-    "tenantId": "",
-    "subscriptionId": "",
-    "resourceGroup": "",
-    "location": "westeurope",
-    "devEnrollmentGroupName": "SimulatedTrackersDev",
-    "prodEnrollmentGroupName": "SimulatedTrackersProd",
-    "developerUserId": "<your azure ad user object ID>",
-    "developerUsername": "<youruser@something.com>",
-    "developerIpAddress": "<your-ip-address-for-sql-firewall>",
-    "adApplicationTenantId": "<your azure ad tenant id for the app registration>",
-    "adApplicationUri": "https://<your azure ad tenant>.onmicrosoft.com/LocationTrackingDemo",
-    "devSignalRHubName": "locationTrackingDev",
-    "prodSignalRHubName": "locationTrackingProd"
+  "tenantId": "",
+  "subscriptionId": "",
+  "resourceGroup": "",
+  "location": "westeurope",
+  "devEnrollmentGroupName": "SimulatedVehiclesDev",
+  "prodEnrollmentGroupName": "SimulatedVehiclesProd",
+  "developerUserId": "<your azure ad user object ID>",
+  "developerUsername": "<youruser@something.com>",
+  "developerIpAddress": "<your-ip-address-for-sql-firewall>",
+  "adApplicationTenantId": "<your azure ad tenant id for the app registration>",
+  "adApplicationUri": "https://<your azure ad tenant>.onmicrosoft.com/LocationTrackingDemo",
+  "devSignalRHubName": "locationTrackingDev",
+  "prodSignalRHubName": "locationTrackingProd"
 }

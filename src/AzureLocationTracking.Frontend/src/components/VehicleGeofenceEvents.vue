@@ -9,10 +9,10 @@ interface GeofenceEvent {
     exitTimestamp: string | null;
 }
 
-const props = defineProps<{ trackerId: string | null | undefined }>();
+const props = defineProps<{ vehicleId: string | null | undefined }>();
 const geofenceEvents = ref<GeofenceEvent[]>([]);
 
-watch(() => props.trackerId, (id: string | null | undefined) => {
+watch(() => props.vehicleId, (id: string | null | undefined) => {
     if (id !== null && id !== undefined) {
         geofenceEvents.value = [];
         updateGeofenceEvents(id);
@@ -21,8 +21,8 @@ watch(() => props.trackerId, (id: string | null | undefined) => {
     immediate: true
 });
 
-function updateGeofenceEvents(trackerId: string) {
-    getGeofenceEvents(trackerId)
+function updateGeofenceEvents(vehicleId: string) {
+    getGeofenceEvents(vehicleId)
         .then(events => {
             const dateDisplayOptions: Intl.DateTimeFormatOptions = {
                 year: 'numeric',
@@ -44,8 +44,8 @@ function updateGeofenceEvents(trackerId: string) {
 }
 
 function onGeofenceEnteredOrExited(data: Events['geofenceEntered'] | Events['geofenceExited']) {
-    if (data.trackerId === props.trackerId) {
-        updateGeofenceEvents(data.trackerId);
+    if (data.vehicleId === props.vehicleId) {
+        updateGeofenceEvents(data.vehicleId);
     }
 }
 

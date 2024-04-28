@@ -1,5 +1,21 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {}
+  "parameters": {
+    "cpuCores": {
+      "value": "0.25"
+    },
+    "memory": {
+      "value": "0.5Gi"
+    },
+    "simulatedDeviceCount": {
+      "value": 10
+    },
+    "minReplicas": {
+      "value": 3
+    },
+    "maxReplicas": {
+      "value": 3
+    }
+  }
 }

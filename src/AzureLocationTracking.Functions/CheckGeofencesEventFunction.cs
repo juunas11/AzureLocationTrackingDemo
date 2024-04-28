@@ -28,6 +28,9 @@ public class CheckGeofencesEventFunction
         [EventHubTrigger("%EventHubName%", Connection = "EventHubConnection", ConsumerGroup = "geofenceCheck")] string[] events,
         FunctionContext functionContext)
     {
+        _telemetryClient.GetMetric("Event Hub batch size", "Function")
+            .TrackValue(events.Length, nameof(CheckGeofences));
+
         var log = functionContext.GetLogger<CheckGeofencesEventFunction>();
         var exceptions = new List<Exception>();
         var signalRMessageActions = new List<SignalRMessageAction>();
@@ -72,14 +75,14 @@ public class CheckGeofencesEventFunction
     private async Task<List<SignalRMessageAction>> ProcessGeofenceCheckAsync(
         LocationUpdateEvent ev)
     {
-        var trackerId = ev.Id;
+        var vehicleId = ev.Id;
         var location = SqlGeography.Point(ev.Lat, ev.Lng, 4326);
 
         var signalRMessageActions = new List<SignalRMessageAction>();
 
         await using (var transaction = await _geofenceRepository.BeginTransactionAsync())
         {
-            var geofenceEvents = await CheckGeofencesAsync(trackerId, location, ev.Ts, transaction);
+            var geofenceEvents = await CheckGeofencesAsync(vehicleId, location, ev.Ts, transaction);
             var longitudeNumber = (int)Math.Floor(ev.Lng);
             var latitudeNumber = (int)Math.Floor(ev.Lat);
 
@@ -89,8 +92,8 @@ public class CheckGeofencesEventFunction
                     geofenceEvent.Type == GeofenceEventType.Entry ? "geofenceEntered" : "geofenceExited",
                     new object[]
                     {
-                        trackerId.ToString(),
-                        geofenceEvent.GeofenceId,
+                        vehicleId.ToString(),
+                        geofenceEvent.GeofenceId.ToString(),
                     }
                 ){
                     GroupName = $"grid:{longitudeNumber}:{latitudeNumber}",
@@ -104,17 +107,17 @@ public class CheckGeofencesEventFunction
     }
 
     private async Task<List<GeofenceEvent>> CheckGeofencesAsync(
-        Guid trackerId,
+        Guid vehicleId,
         SqlGeography location,
         DateTime eventTimestamp,
         DbTransaction transaction)
     {
         var (enteredGeofenceIds, exitedGeofenceIds) = await _geofenceRepository
-            .GetEnteredAndExitedGeofenceIdsAsync(trackerId, location, eventTimestamp, transaction);
+            .GetEnteredAndExitedGeofenceIdsAsync(vehicleId, location, eventTimestamp, transaction);
 
-        await _geofenceRepository.AddLocationTrackerInGeofencesAsync(trackerId, enteredGeofenceIds, eventTimestamp, transaction);
+        await _geofenceRepository.AddVehicleInGeofencesAsync(vehicleId, enteredGeofenceIds, eventTimestamp, transaction);
 
-        await _geofenceRepository.SetLocationTrackerOutOfGeofencesAsync(trackerId, exitedGeofenceIds, eventTimestamp, transaction);
+        await _geofenceRepository.SetVehicleOutOfGeofencesAsync(vehicleId, exitedGeofenceIds, eventTimestamp, transaction);
 
         return enteredGeofenceIds
             .Select(id => new GeofenceEvent

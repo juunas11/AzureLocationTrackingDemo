@@ -1,5 +1,7 @@
 param location string
 param naming object
+param dpsSkuName string
+param dpsCapacity int
 param iotHubName string
 
 resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' existing = {
@@ -10,8 +12,8 @@ resource deviceProvisioningService 'Microsoft.Devices/provisioningServices@2022-
   name: naming.deviceProvisioningService
   location: location
   sku: {
-    name: 'S1'
-    capacity: 1
+    name: dpsSkuName
+    capacity: dpsCapacity
   }
   properties: {
     allocationPolicy: 'Hashed'

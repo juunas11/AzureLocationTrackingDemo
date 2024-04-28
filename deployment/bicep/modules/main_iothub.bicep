@@ -1,12 +1,21 @@
 param location string
 param naming object
+param iotHubEventHubPartitionCount int
+param iotHubSku string
+param iotHubCapacity int
 param iotHubTwinContributorUserId string
 param eventHubNamespaceName string
 param prodLocationDataEventHubName string
 param devLocationDataEventHubName string
 
-var eventHubSenderRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '2b629674-e913-4c01-ae53-ef4638d8f975')
-var iotHubTwinContributorRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '494bdba2-168f-4f31-a0a1-191d2f7c028c')
+var eventHubSenderRoleDefinitionId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  '2b629674-e913-4c01-ae53-ef4638d8f975'
+)
+var iotHubTwinContributorRoleDefinitionId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  '494bdba2-168f-4f31-a0a1-191d2f7c028c'
+)
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' existing = {
   name: eventHubNamespaceName
@@ -51,8 +60,8 @@ resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' = {
   name: naming.iotHub
   location: location
   sku: {
-    name: 'S1'
-    capacity: 1
+    name: iotHubSku
+    capacity: iotHubCapacity
   }
   identity: {
     type: 'UserAssigned'
@@ -63,7 +72,7 @@ resource iotHub 'Microsoft.Devices/IotHubs@2021-07-02' = {
   properties: {
     eventHubEndpoints: {
       events: {
-        partitionCount: 4
+        partitionCount: iotHubEventHubPartitionCount
         retentionTimeInDays: 1
       }
     }

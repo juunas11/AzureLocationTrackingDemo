@@ -16,7 +16,7 @@ function Set-DpsEnrollmentGroups {
     $dpsName = $mainBicepOutputs.deviceProvisioningServiceName.value
     $iotHubHostName = $mainBicepOutputs.iotHubHostName.value
 
-    $initialTwinProperties = "{'eventIntervalMillis':10000,'speedKilometersPerHour':50}"
+    $initialTwinProperties = "{'eventIntervalMillis':1000,'speedKilometersPerHour':50}"
 
     Write-Host "Getting DPS enrollment groups..."
     $enrollmentGroups = az iot dps enrollment-group list --subscription "$subscriptionId" -g "$resourceGroup" `

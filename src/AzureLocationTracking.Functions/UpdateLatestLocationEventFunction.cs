@@ -9,14 +9,14 @@ using System.Text.Json;
 namespace AzureLocationTracking.Functions;
 public class UpdateLatestLocationEventFunction
 {
-    private readonly LocationTrackerRepository _locationTrackerRepository;
+    private readonly VehicleRepository _vehicleRepository;
     private readonly TelemetryClient _telemetryClient;
 
     public UpdateLatestLocationEventFunction(
-        LocationTrackerRepository locationTrackerRepository,
+        VehicleRepository vehicleRepository,
         TelemetryClient telemetryClient)
     {
-        _locationTrackerRepository = locationTrackerRepository;
+        _vehicleRepository = vehicleRepository;
         _telemetryClient = telemetryClient;
     }
 
@@ -26,11 +26,14 @@ public class UpdateLatestLocationEventFunction
         [EventHubTrigger("%EventHubName%", Connection = "EventHubConnection", ConsumerGroup = "latestLocationUpdate")] string[] events,
         FunctionContext functionContext)
     {
+        _telemetryClient.GetMetric("Event Hub batch size", "Function")
+            .TrackValue(events.Length, nameof(UpdateLatestLocations));
+
         var log = functionContext.GetLogger<CheckGeofencesEventFunction>();
         var exceptions = new List<Exception>();
         var signalRMessageActions = new List<SignalRMessageAction>();
 
-        await _locationTrackerRepository.OpenConnectionAsync();
+        await _vehicleRepository.OpenConnectionAsync();
 
         foreach (string eventData in events)
         {
@@ -70,14 +73,14 @@ public class UpdateLatestLocationEventFunction
     private async Task<List<SignalRMessageAction>> ProcessLatestLocationUpdateAsync(
         LocationUpdateEvent ev)
     {
-        var trackerId = ev.Id;
-        var location = SqlGeography.Point(ev.Lat, ev.Lng, 4326);
+        var vehicleId = ev.Id;
+        var location = SqlGeography.Point(latitude: ev.Lat, longitude: ev.Lng, srid: 4326);
 
         var signalRMessageActions = new List<SignalRMessageAction>();
 
-        await using (var transaction = await _locationTrackerRepository.BeginTransactionAsync())
+        await using (var transaction = await _vehicleRepository.BeginTransactionAsync())
         {
-            await _locationTrackerRepository.UpdateLatestLocationAsync(trackerId, location, transaction);
+            await _vehicleRepository.UpdateLatestLocationAsync(vehicleId, location, transaction);
 
             var gridLongitude = (int)Math.Floor(ev.Lng);
             var gridLatitude = (int)Math.Floor(ev.Lat);
@@ -85,7 +88,7 @@ public class UpdateLatestLocationEventFunction
             // Message is sent to a group of connections that are interested in the grid cell that the location is in.
             signalRMessageActions.Add(new SignalRMessageAction("locationUpdated", new object[]
             {
-                trackerId.ToString(),
+                vehicleId.ToString(),
                 ev.Lat,
                 ev.Lng,
                 new DateTimeOffset(ev.Ts).ToUnixTimeMilliseconds(),

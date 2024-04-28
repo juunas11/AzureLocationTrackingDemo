@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/AzureLocationTracking.TrackerDevice/bin/Debug/net7.0/AzureLocationTracking.TrackerDevice.dll",
+            "program": "${workspaceFolder}/src/AzureLocationTracking.VehicleSimulator/bin/Debug/net8.0/AzureLocationTracking.VehicleSimulator.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/AzureLocationTracking.TrackerDevice",
+            "cwd": "${workspaceFolder}/src/AzureLocationTracking.VehicleSimulator",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false

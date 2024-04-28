@@ -4,6 +4,7 @@ using Azure.Core;
 using Microsoft.Extensions.Configuration;
 
 namespace AzureLocationTracking.Functions.Services;
+
 public class IotHubDeviceTwinService
 {
     private readonly string _iotHubHostName;
@@ -18,15 +19,15 @@ public class IotHubDeviceTwinService
     }
 
     public async Task UpdateTwinPropertiesAsync(
-        Guid trackerId,
+        Guid vehicleId,
         int speedKilometersPerHour,
         int eventIntervalMillis)
     {
         using var registryManager = RegistryManager.Create(_iotHubHostName, _tokenCredential);
-        var twin = await registryManager.GetTwinAsync(trackerId.ToString());
+        var twin = await registryManager.GetTwinAsync(vehicleId.ToString());
         var twinPatch = new Twin();
         twinPatch.Properties.Desired["speedKilometersPerHour"] = speedKilometersPerHour;
         twinPatch.Properties.Desired["eventIntervalMillis"] = eventIntervalMillis;
-        await registryManager.UpdateTwinAsync(trackerId.ToString(), twinPatch, twin.ETag);
+        await registryManager.UpdateTwinAsync(vehicleId.ToString(), twinPatch, twin.ETag);
     }
 }

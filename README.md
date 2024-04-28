@@ -30,6 +30,7 @@ Prerequisites:
 - PowerShell
   - Microsoft.Graph module
   - SqlServer module
+- Node.js (tested with 20.11.1)
 
 To deploy the application in your own Azure subscription, first rename _deployment/config.sample.json_ to _deployment/config.json_.
 Then fill in at least these settings:
@@ -96,12 +97,13 @@ Prerequisites:
 - Ngrok
 - SQL database
 - Ability to run .NET Azure Functions (.NET 8)
+- Node.js (tested with 20.11.1)
 
 From the deployment script outputs, you should get the necessary user secrets to configure and run both .NET applications:
 
 - AzureLocationTracking.Functions
   - Function App that hosts the front-end and acts as its back-end, also processes Event Hub messages
-- AzureLocationTracking.TrackerDevice
+- AzureLocationTracking.VehicleSimulator
   - Device simulator that sends events to IoT Hub, which then get forwarded to the Function App
 
 Note that the SQL database connection string is missing from these, you will need to specify one yourself.
@@ -135,7 +137,7 @@ you can use it to see the data that a front-end receives.
 
 ## How it works
 
-In this demo application, the data flow starts from the Container App, which runs the location tracker device simulator.
+In this demo application, the data flow starts from the Container App, which runs the vehicle simulator.
 This simulator uses a set of predefined routes in `routes.json`, from which it selects one at random.
 It starts "moving" from a random point on the route, at a speed of 50 km/h, reporting its latest location every 5 seconds.
 
@@ -151,8 +153,8 @@ The IoT Hub device twin for each device has an environment tag, that is used in 
 
 The Event Hubs have three listeners: Azure Data Explorer, geofence update function, and location update function.
 ADX writes all events to a table.
-The geofence update function checks if the new location puts the tracker inside a geofence it wasn't already in, and fires an event through SignalR for it.
-The location update function updates the latest location for the tracker in the SQL database and fires an event through SignalR.
+The geofence update function checks if the new location puts the vehicle inside a geofence it wasn't already in, and fires an event through SignalR for it.
+The location update function updates the latest location for the vehicle in the SQL database and fires an event through SignalR.
 
 The Vue front-end's files are deployed inside the Function App and it returns the index.html file when you hit the root of the Function App.
 The front-end then connects to the Function App for a SignalR connection, which gets forwarded to SignalR Service.

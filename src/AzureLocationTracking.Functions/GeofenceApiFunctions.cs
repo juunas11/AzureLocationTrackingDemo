@@ -35,7 +35,9 @@ public class GeofenceApiFunctions
             var center = geofence.Border.EnvelopeCenter();
             var feature = new Feature(polygon, id: geofence.Id.ToString(), properties: new Dictionary<string, object>
             {
+                // GeoJSON uses longitude, latitude order.
                 ["center"] = new[] { center.Long.Value, center.Lat.Value },
+                ["name"] = geofence.Name ?? ""
             });
             featureCollection.Features.Add(feature);
         }

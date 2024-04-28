@@ -1,4 +1,5 @@
 ﻿namespace AzureLocationTracking.Functions.Models;
+
 public class GeofenceEvent
 {
     public GeofenceEvent(int geofenceId, DateTime entryTimestamp, DateTime? exitTimestamp)

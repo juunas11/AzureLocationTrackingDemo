@@ -1,4 +1,6 @@
 param location string = resourceGroup().location
+
+// Parameters from command line
 param containerRegistryName string
 param containerAppEnvironmentName string
 param containerAppIdentityName string
@@ -7,9 +9,15 @@ param sqlDbName string
 param appInsightsConnectionString string
 param deviceProvisioningServiceGlobalEndpoint string
 param deviceProvisioningServiceIdScope string
-param iotHubHostName string
 @secure()
 param dpsEnrollmentGroupPrimaryKey string
+
+// Parameters from main.parameters.json
+param cpuCores string
+param memory string
+param simulatedDeviceCount int
+param minReplicas int
+param maxReplicas int
 
 var namingSuffix = uniqueString(resourceGroup().id)
 
@@ -59,12 +67,12 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
       revisionSuffix: ''
       containers: [
         {
-          image: '${containerRegistry.properties.loginServer}/simulatedtracker:latest'
-          name: 'simulatedtracker'
+          image: '${containerRegistry.properties.loginServer}/simulatedvehicle:latest'
+          name: 'simulatedvehicle'
           resources: {
             #disable-next-line BCP036
-            cpu: '0.25'
-            memory: '0.5Gi'
+            cpu: cpuCores
+            memory: memory
           }
           env: [
             {
@@ -73,7 +81,7 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
             }
             {
               name: 'SIMULATED_DEVICE_COUNT'
-              value: '10'
+              value: string(simulatedDeviceCount)
             }
             {
               name: 'DEVICE_PROVISIONING_PRIMARY_KEY'
@@ -88,10 +96,6 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
               value: deviceProvisioningServiceIdScope
             }
             {
-              name: 'IOT_HUB_HOST_NAME'
-              value: iotHubHostName
-            }
-            {
               name: 'SQL_CONNECTION_STRING'
               value: 'Server=${sqlServerFqdn}; Authentication=Active Directory Managed Identity; Encrypt=True; User Id=${containerAppIdentity.properties.clientId}; Database=${sqlDbName}'
             }
@@ -103,8 +107,8 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
         }
       ]
       scale: {
-        minReplicas: 0
-        maxReplicas: 1
+        minReplicas: minReplicas
+        maxReplicas: maxReplicas
       }
     }
   }

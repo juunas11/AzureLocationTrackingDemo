@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using HttpRequestData = Microsoft.Azure.Functions.Worker.Http.HttpRequestData;
 
 namespace AzureLocationTracking.Functions.Services;
+
 public class RequestAuthorizer
 {
     private readonly string _azureAdClientId;

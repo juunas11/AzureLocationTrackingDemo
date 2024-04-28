@@ -1,5 +1,51 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {}
+  "parameters": {
+    "containerRegistrySku": {
+      "value": "Basic"
+    },
+    "dpsSkuName": {
+      "value": "S1"
+    },
+    "dpsCapacity": {
+      "value": 1
+    },
+    "iotHubEventHubPartitionCount": {
+      "value": 4
+    },
+    "iotHubSku": {
+      "value": "S1"
+    },
+    "iotHubCapacity": {
+      "value": 1
+    },
+    "eventHubSku": {
+      "value": "Standard"
+    },
+    "eventHubCapacity": {
+      "value": 1
+    },
+    "adxSkuName": {
+      "value": "Dev(No SLA)_Standard_E2a_v4"
+    },
+    "adxSkuTier": {
+      "value": "Basic"
+    },
+    "adxCapacity": {
+      "value": 1
+    },
+    "signalRSku": {
+      "value": "Standard_S1"
+    },
+    "signalRCapacity": {
+      "value": 1
+    },
+    "sqlDbSku": {
+      "value": "S3"
+    },
+    "sqlDbCapacity": {
+      "value": 100
+    }
+  }
 }

@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace AzureLocationTracking.TrackerDevice;
+namespace AzureLocationTracking.VehicleSimulator;
 internal static class DeviceProvisioningKey
 {
     public static SecurityProviderSymmetricKey CreateFromEnrollmentGroupKey(

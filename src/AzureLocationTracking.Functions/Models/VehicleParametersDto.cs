@@ -1,6 +1,6 @@
 ﻿namespace AzureLocationTracking.Functions.Models;
 
-public class TrackerParametersDto
+public class VehicleParametersDto
 {
     public int SpeedKilometersPerHour { get; set; }
     public int EventIntervalMillis { get; set; }

@@ -39,17 +39,17 @@ internal class Program
             .WithUrl(hubEndpoint)
             .Build();
 
-        connection.On("locationUpdated", (string trackerId, double latitude, double longitude, long timestamp) =>
+        connection.On("locationUpdated", (string vehicleId, double latitude, double longitude, long timestamp) =>
         {
-            Console.WriteLine($"Location update: '{trackerId}': {latitude} {longitude}");
+            Console.WriteLine($"Location update: '{vehicleId}': {latitude} {longitude}");
         });
-        connection.On("geofenceEntered", (string trackerId, int geofenceId) =>
+        connection.On("geofenceEntered", (string vehicleId, int geofenceId) =>
         {
-            Console.WriteLine($"Geofence enter: '{trackerId}': {geofenceId}");
+            Console.WriteLine($"Geofence enter: '{vehicleId}': {geofenceId}");
         });
-        connection.On("geofenceExited", (string trackerId, int geofenceId) =>
+        connection.On("geofenceExited", (string vehicleId, int geofenceId) =>
         {
-            Console.WriteLine($"Geofence exit: '{trackerId}': {geofenceId}");
+            Console.WriteLine($"Geofence exit: '{vehicleId}': {geofenceId}");
         });
 
         connection.Closed += ex =>

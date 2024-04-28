@@ -16,11 +16,6 @@ Import-Module (Join-Path $PSScriptRoot scriptModules\Sql) -Force
 # Run these before running script:
 # Docker Desktop
 
-## TODO:
-## - Check IoT extension is installed: az extension list -o tsv --query "[].name"
-##   should contain "azure-iot"
-## - Install the extension if missing: az extension add --name azure-iot
-
 $config = Get-Configuration -configPath (Join-Path $PSScriptRoot config.json)
 
 Initialize-AzCli -config $config
@@ -48,7 +43,7 @@ $prodEnrollmentGroupPrimaryKey = $dpsKeys.prodEnrollmentGroupPrimaryKey
 $devEnrollmentGroupPrimaryKey = $dpsKeys.devEnrollmentGroupPrimaryKey
 
 Initialize-Sql -config $config -mainBicepOutputs $mainBicepOutputs `
-    -dropAndCreateSchemaSqlPath (Join-Path $PSScriptRoot sql\dropAndCreateSchema.sql) `
+    -updateSchemaSqlPath (Join-Path $PSScriptRoot sql\updateSchema.sql) `
     -seedSqlPath (Join-Path $PSScriptRoot sql\seed.sql)
 
 Invoke-AdxSetupScript -mainBicepOutputs $mainBicepOutputs -setupScriptPath (Join-Path $PSScriptRoot adx\adx_setup.csl)

@@ -25,7 +25,7 @@ public class Program
                 services.AddApplicationInsightsTelemetryWorkerService();
                 services.ConfigureFunctionsApplicationInsights();
 
-                services.AddTransient<LocationTrackerRepository>();
+                services.AddTransient<VehicleRepository>();
                 services.AddTransient<GeofenceRepository>();
                 services.AddSingleton(serviceProvider =>
                 {

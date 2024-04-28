@@ -3,12 +3,12 @@ import { getAccessToken } from '@/services/login';
 import { useSidebarStore } from '@/stores/sidebar';
 import { useUserStore } from '@/stores/user';
 import { ref } from 'vue';
-import TrackerGeofenceEvents from './TrackerGeofenceEvents.vue';
-import { useLocationTrackingStore } from '@/stores/locationTracking';
+import VehicleGeofenceEvents from './VehicleGeofenceEvents.vue';
+import { useVehicleStore } from '@/stores/vehicle';
 
 const sidebarStore = useSidebarStore();
 const userStore = useUserStore();
-const locationTrackingStore = useLocationTrackingStore();
+const vehicleStore = useVehicleStore();
 
 const speedValue = ref('');
 const updateIntervalValue = ref('');
@@ -25,7 +25,7 @@ function onParametersSendClick() {
             SpeedKilometersPerHour: speed,
             EventIntervalMillis: updateInterval
         };
-        return fetch(`/api/trackers/${sidebarStore.selectedTrackerId}/parameters`, {
+        return fetch(`/api/vehicles/${sidebarStore.selectedVehicleId}/parameters`, {
             method: 'PUT',
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -51,14 +51,14 @@ function onParametersSendClick() {
     <div v-if="sidebarStore.isOpen" class="container">
         <button type="button" @click="sidebarStore.closeSidebar">Close</button>
         <p>
-            <b>Tracker ID:</b> <span id="trackerIdDisplay">{{ sidebarStore.selectedTrackerId }}</span>
+            <b>Vehicle ID:</b> <span id="vehicleIdDisplay">{{ sidebarStore.selectedVehicleId }}</span>
         </p>
         <p>
-            <b>Speed:</b> <span id="speedDisplay">{{ locationTrackingStore.trackers[sidebarStore.selectedTrackerId ??
+            <b>Speed:</b> <span id="speedDisplay">{{ vehicleStore.vehicles[sidebarStore.selectedVehicleId ??
                 '']?.speed?.toFixed(0) ?? '-' }}</span> km/h
         </p>
         <p>
-            <b>Heading:</b> <span id="headingDisplay">{{ locationTrackingStore.trackers[sidebarStore.selectedTrackerId ??
+            <b>Heading:</b> <span id="headingDisplay">{{ vehicleStore.vehicles[sidebarStore.selectedVehicleId ??
                 '']?.heading?.toFixed(2) ?? '-' }}</span>
             degrees
         </p>
@@ -74,7 +74,7 @@ function onParametersSendClick() {
             <button type="button" @click="onParametersSendClick">Send</button>
         </div>
 
-        <TrackerGeofenceEvents :tracker-id="sidebarStore.selectedTrackerId" />
+        <VehicleGeofenceEvents :vehicle-id="sidebarStore.selectedVehicleId" />
     </div>
 </template>
 

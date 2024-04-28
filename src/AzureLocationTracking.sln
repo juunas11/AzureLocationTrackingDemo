@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureLocationTracking.TrackerDevice", "AzureLocationTracking.TrackerDevice\AzureLocationTracking.TrackerDevice.csproj", "{D5CF9117-DDB4-46BB-9A83-DD0C91D02826}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureLocationTracking.VehicleSimulator", "AzureLocationTracking.VehicleSimulator\AzureLocationTracking.VehicleSimulator.csproj", "{D5CF9117-DDB4-46BB-9A83-DD0C91D02826}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureLocationTracking.Messages", "AzureLocationTracking.Messages\AzureLocationTracking.Messages.csproj", "{3BF6EB8C-FDE2-47CE-8F55-BC79D0C29803}"
 EndProject

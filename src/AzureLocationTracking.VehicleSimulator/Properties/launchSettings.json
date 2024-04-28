@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "AzureLocationTracking.TrackerDevice": {
+    "AzureLocationTracking.VehicleSimulator": {
       "commandName": "Project",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"

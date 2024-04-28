@@ -34,7 +34,7 @@ function Set-ContainerAppUser {
 FROM [sys].[database_principals] `
 WHERE [type] = N'E' AND [name] = N'$containerAppIdentityName') `
 CREATE USER [$containerAppIdentityName] FROM EXTERNAL PROVIDER;"
-    $grantContainerAppSqlAccess = "GRANT SELECT, INSERT, DELETE ON [dbo].[LocationTrackers] TO [$containerAppIdentityName];"
+    $grantContainerAppSqlAccess = "GRANT SELECT, INSERT, DELETE ON [dbo].[Vehicles] TO [$containerAppIdentityName];"
 
     Write-Host "Creating Container App SQL user..."
     Invoke-Sqlcmd -ServerInstance $sqlServerFqdn -Database $sqlDbName -AccessToken $sqlAccessToken -Query $createContainerAppUser
@@ -61,9 +61,9 @@ function Set-FunctionAppUser {
 FROM [sys].[database_principals] `
 WHERE [type] = N'E' AND [name] = N'$functionsAppIdentityName') `
 CREATE USER [$functionsAppIdentityName] FROM EXTERNAL PROVIDER;"
-    $grantFunctionsAppSqlAccess = "GRANT SELECT, UPDATE ON [dbo].[LocationTrackers] TO [$functionsAppIdentityName];"
+    $grantFunctionsAppSqlAccess = "GRANT SELECT, UPDATE ON [dbo].[Vehicles] TO [$functionsAppIdentityName];"
     $grantFunctionsAppSqlAccess += "GRANT SELECT ON [dbo].[Geofences] TO [$functionsAppIdentityName];"
-    $grantFunctionsAppSqlAccess += "GRANT SELECT, INSERT, UPDATE, DELETE ON [dbo].[LocationTrackersInGeofences] TO [$functionsAppIdentityName];"
+    $grantFunctionsAppSqlAccess += "GRANT SELECT, INSERT, UPDATE, DELETE ON [dbo].[VehiclesInGeofences] TO [$functionsAppIdentityName];"
 
     Write-Host "Creating Functions App SQL user..."
     Invoke-Sqlcmd -ServerInstance $sqlServerFqdn -Database $sqlDbName -AccessToken $sqlAccessToken -Query $createFunctionsAppUser
@@ -79,7 +79,7 @@ function Initialize-Sql {
         [object] $mainBicepOutputs,
 
         [Parameter(Mandatory = $true)]
-        [string] $dropAndCreateSchemaSqlPath,
+        [string] $updateSchemaSqlPath,
 
         [Parameter(Mandatory = $true)]
         [string] $seedSqlPath
@@ -92,8 +92,8 @@ function Initialize-Sql {
     $sqlServerFqdn = $mainBicepOutputs.sqlServerFqdn.value
     $sqlDbName = $mainBicepOutputs.sqlDbName.value
 
-    Write-Host "Dropping and creating SQL schema..."
-    Invoke-Sqlcmd -ServerInstance $sqlServerFqdn -Database $sqlDbName -AccessToken $sqlAccessToken -InputFile $dropAndCreateSchemaSqlPath
+    Write-Host "Creating/updating SQL schema..."
+    Invoke-Sqlcmd -ServerInstance $sqlServerFqdn -Database $sqlDbName -AccessToken $sqlAccessToken -InputFile $updateSchemaSqlPath
     Write-Host "Inserting seed data to SQL..."
     Invoke-Sqlcmd -ServerInstance $sqlServerFqdn -Database $sqlDbName -AccessToken $sqlAccessToken -InputFile $seedSqlPath
 

@@ -4,21 +4,21 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<UserSecretsId>dotnet-AzureLocationTracking.TrackerDevice-29C361F2-37DD-4EAE-BE24-F0E41E59FDA9</UserSecretsId>
+		<UserSecretsId>dotnet-AzureLocationTracking.VehicleSimulator-29C361F2-37DD-4EAE-BE24-F0E41E59FDA9</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Azure.Identity" Version="1.10.4" />
-		<PackageReference Include="Azure.Messaging.EventHubs" Version="5.11.0" />
-		<PackageReference Include="Dapper" Version="2.1.28" />
+		<PackageReference Include="Azure.Identity" Version="1.11.2" />
+		<PackageReference Include="Azure.Messaging.EventHubs" Version="5.11.2" />
+		<PackageReference Include="Dapper" Version="2.1.35" />
 		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.22.0" />
-		<PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.42.2" />
+		<PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.42.3" />
 		<PackageReference Include="Microsoft.Azure.Devices.Provisioning.Client" Version="1.19.4" />
 		<PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Amqp" Version="1.16.6" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
 		<PackageReference Include="NetTopologySuite.IO.GeoJSON4STJ" Version="4.0.0" />
 	</ItemGroup>
 

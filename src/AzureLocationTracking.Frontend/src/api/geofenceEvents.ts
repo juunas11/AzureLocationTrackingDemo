@@ -1,5 +1,5 @@
-export function getGeofenceEvents(trackerId: string) {
-  return fetch(`/api/trackers/${trackerId}/geofenceEvents`)
+export function getGeofenceEvents(vehicleId: string) {
+  return fetch(`/api/vehicles/${vehicleId}/geofenceEvents`)
     .then((r) => r.json())
     .catch((err) => console.error(err));
 }

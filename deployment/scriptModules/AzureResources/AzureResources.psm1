@@ -264,7 +264,6 @@ function Deploy-ContainerAppTemplate {
     $appInsightsConnectionString = $mainBicepOutputs.appInsightsConnectionString.value
     $deviceProvisioningServiceGlobalEndpoint = $mainBicepOutputs.deviceProvisioningServiceGlobalEndpoint.value
     $deviceProvisioningServiceIdScope = $mainBicepOutputs.deviceProvisioningServiceIdScope.value
-    $iotHubHostName = $mainBicepOutputs.iotHubHostName.value
     $sqlServerFqdn = $mainBicepOutputs.sqlServerFqdn.value
     $sqlDbName = $mainBicepOutputs.sqlDbName.value
 
@@ -273,8 +272,7 @@ function Deploy-ContainerAppTemplate {
         -p "@containerapp.parameters.json" `
         -p containerAppEnvironmentName=$containerAppEnvironmentName containerRegistryName=$containerRegistryName containerAppIdentityName=$containerAppIdentityName `
         -p deviceProvisioningServiceGlobalEndpoint=$deviceProvisioningServiceGlobalEndpoint deviceProvisioningServiceIdScope=$deviceProvisioningServiceIdScope `
-        -p dpsEnrollmentGroupPrimaryKey=$prodEnrollmentGroupPrimaryKey iotHubHostName=$iotHubHostName `
-        -p sqlServerFqdn=$sqlServerFqdn sqlDbName=$sqlDbName appInsightsConnectionString=$appInsightsConnectionString | ConvertFrom-Json
+        -p dpsEnrollmentGroupPrimaryKey=$prodEnrollmentGroupPrimaryKey sqlServerFqdn=$sqlServerFqdn sqlDbName=$sqlDbName appInsightsConnectionString=$appInsightsConnectionString | ConvertFrom-Json
     if ($LASTEXITCODE -ne 0) {
         Pop-Location
         throw "Failed to deploy containerapp.bicep."

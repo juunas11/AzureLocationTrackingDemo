@@ -1,5 +1,12 @@
 param location string
 param naming object
+@allowed([
+  'Free_F1'
+  'Standard_S1'
+  'Premium_P1'
+])
+param signalRSku string
+param signalRCapacity int
 param prodHubName string
 param devHubName string
 @secure()
@@ -36,9 +43,8 @@ resource signalR 'Microsoft.SignalRService/signalR@2023-02-01' = {
   location: location
   kind: 'SignalR'
   sku: {
-    name: 'Free_F1'
-    capacity: 1
-    tier: 'Free'
+    name: signalRSku
+    capacity: signalRCapacity
   }
   properties: {
     cors: {

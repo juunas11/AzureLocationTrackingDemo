@@ -1,4 +1,6 @@
 param location string = resourceGroup().location
+
+// Parameters from command line
 param acrPushUserId string
 param sqlAdminUserId string
 param sqlAdminUsername string
@@ -15,6 +17,23 @@ param devSignalRHubName string
 param prodSignalRUpstreamUrl string
 @secure()
 param devSignalRUpstreamUrl string
+
+// Parameters from main.parameters.json
+param containerRegistrySku string
+param dpsSkuName string
+param dpsCapacity int
+param iotHubEventHubPartitionCount int
+param iotHubSku string
+param iotHubCapacity int
+param eventHubSku string
+param eventHubCapacity int
+param adxSkuName string
+param adxSkuTier string
+param adxCapacity int
+param signalRSku string
+param signalRCapacity int
+param sqlDbSku string
+param sqlDbCapacity int
 
 var appName = 'locationtracking'
 var namingSuffix = uniqueString(resourceGroup().id)
@@ -52,6 +71,9 @@ module eventHub 'modules/main_eventhub.bicep' = {
   params: {
     location: location
     naming: naming
+    iotHubEventHubPartitionCount: iotHubEventHubPartitionCount
+    eventHubSku: eventHubSku
+    eventHubCapacity: eventHubCapacity
   }
 }
 
@@ -60,6 +82,9 @@ module iotHub 'modules/main_iothub.bicep' = {
   params: {
     location: location
     naming: naming
+    iotHubEventHubPartitionCount: iotHubEventHubPartitionCount
+    iotHubSku: iotHubSku
+    iotHubCapacity: iotHubCapacity
     eventHubNamespaceName: eventHub.outputs.namespaceName
     prodLocationDataEventHubName: eventHub.outputs.prodEventHubName
     devLocationDataEventHubName: eventHub.outputs.devEventHubName
@@ -72,6 +97,8 @@ module deviceProvisioningService 'modules/main_dps.bicep' = {
   params: {
     location: location
     naming: naming
+    dpsSkuName: dpsSkuName
+    dpsCapacity: dpsCapacity
     iotHubName: iotHub.outputs.name
   }
 }
@@ -81,6 +108,9 @@ module adx 'modules/main_adx.bicep' = {
   params: {
     location: location
     naming: naming
+    adxSkuName: adxSkuName
+    adxSkuTier: adxSkuTier
+    adxCapacity: adxCapacity
     eventHubNamespaceName: eventHub.outputs.namespaceName
     prodLocationDataEventHubName: eventHub.outputs.prodEventHubName
     devLocationDataEventHubName: eventHub.outputs.devEventHubName
@@ -101,6 +131,7 @@ module containers 'modules/main_containers.bicep' = {
   params: {
     location: location
     naming: naming
+    containerRegistrySku: containerRegistrySku
     acrPushUserId: acrPushUserId
     eventHubNamespaceName: eventHub.outputs.namespaceName
     prodLocationDataEventHubName: eventHub.outputs.prodEventHubName
@@ -113,6 +144,8 @@ module sql 'modules/main_sql.bicep' = {
   params: {
     location: location
     naming: naming
+    sqlDbSku: sqlDbSku
+    sqlDbCapacity: sqlDbCapacity
     sqlAdminUserId: sqlAdminUserId
     sqlAdminUsername: sqlAdminUsername
     sqlFirewallAllowedIpAddress: sqlFirewallAllowedIpAddress
@@ -124,6 +157,8 @@ module signalr 'modules/main_signalr.bicep' = {
   params: {
     location: location
     naming: naming
+    signalRSku: signalRSku
+    signalRCapacity: signalRCapacity
     devUpstreamUrl: devSignalRUpstreamUrl
     prodUpstreamUrl: prodSignalRUpstreamUrl
     devHubName: devSignalRHubName

@@ -185,7 +185,7 @@ resource functionsApp 'Microsoft.Web/sites@2022-03-01' = {
         }
       ]
       ftpsState: 'Disabled'
-      netFrameworkVersion: 'v6.0'
+      netFrameworkVersion: 'v8.0'
     }
   }
 }

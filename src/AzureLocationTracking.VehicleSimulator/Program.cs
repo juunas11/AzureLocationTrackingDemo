@@ -1,4 +1,4 @@
-namespace AzureLocationTracking.TrackerDevice;
+namespace AzureLocationTracking.VehicleSimulator;
 
 public class Program
 {

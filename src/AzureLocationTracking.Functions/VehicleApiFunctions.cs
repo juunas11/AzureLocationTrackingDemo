@@ -7,20 +7,20 @@ using System.Net;
 
 namespace AzureLocationTracking.Functions;
 
-public class LocationTrackerApiFunctions
+public class VehicleApiFunctions
 {
-    private readonly LocationTrackerRepository _locationTrackerRepository;
+    private readonly VehicleRepository _vehicleRepository;
     private readonly IotHubDeviceTwinService _iotHubDeviceTwinService;
     private readonly DataExplorerRepository _dataExplorerRepository;
     private readonly RequestAuthorizer _requestAuthorizer;
 
-    public LocationTrackerApiFunctions(
-        LocationTrackerRepository locationTrackerRepository,
+    public VehicleApiFunctions(
+        VehicleRepository vehicleRepository,
         IotHubDeviceTwinService iotHubDeviceTwinService,
         DataExplorerRepository dataExplorerRepository,
         RequestAuthorizer requestAuthorizer)
     {
-        _locationTrackerRepository = locationTrackerRepository;
+        _vehicleRepository = vehicleRepository;
         _iotHubDeviceTwinService = iotHubDeviceTwinService;
         _dataExplorerRepository = dataExplorerRepository;
         _requestAuthorizer = requestAuthorizer;
@@ -28,12 +28,12 @@ public class LocationTrackerApiFunctions
 
     [Function(nameof(GetGeofenceEvents))]
     public async Task<HttpResponseData> GetGeofenceEvents(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/trackers/{trackerId}/geofenceEvents")] HttpRequestData req,
-        Guid trackerId)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/vehicles/{vehicleId}/geofenceEvents")] HttpRequestData req,
+        Guid vehicleId)
     {
-        await _locationTrackerRepository.OpenConnectionAsync();
+        await _vehicleRepository.OpenConnectionAsync();
 
-        var geofenceEvents = await _locationTrackerRepository.GetLatestGeofenceEvents(trackerId);
+        var geofenceEvents = await _vehicleRepository.GetLatestGeofenceEvents(vehicleId);
 
         var res = req.CreateResponse(HttpStatusCode.OK);
         await res.WriteAsJsonAsync(geofenceEvents.Select(x =>
@@ -43,28 +43,28 @@ public class LocationTrackerApiFunctions
 
     [Function(nameof(UpdateParameters))]
     public async Task<HttpResponseData> UpdateParameters(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "api/trackers/{trackerId}/parameters")] HttpRequestData req,
-        Guid trackerId)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "api/vehicles/{vehicleId}/parameters")] HttpRequestData req,
+        Guid vehicleId)
     {
         if (!await _requestAuthorizer.AuthorizeRequestAsync(req))
         {
             return req.CreateResponse(HttpStatusCode.Unauthorized);
         }
 
-        var parametersDto = await req.ReadFromJsonAsync<TrackerParametersDto>();
+        var parametersDto = await req.ReadFromJsonAsync<VehicleParametersDto>();
 
         await _iotHubDeviceTwinService.UpdateTwinPropertiesAsync(
-            trackerId, parametersDto.SpeedKilometersPerHour, parametersDto.EventIntervalMillis);
+            vehicleId, parametersDto.SpeedKilometersPerHour, parametersDto.EventIntervalMillis);
 
         return req.CreateResponse(HttpStatusCode.NoContent);
     }
 
     [Function(nameof(GetPastLocations))]
     public async Task<HttpResponseData> GetPastLocations(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/trackers/{trackerId}/pastLocations")] HttpRequestData req,
-        Guid trackerId)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/vehicles/{vehicleId}/pastLocations")] HttpRequestData req,
+        Guid vehicleId)
     {
-        var results = await _dataExplorerRepository.GetTrackerRecentPastLocationsAsync(trackerId);
+        var results = await _dataExplorerRepository.GetVehicleRecentPastLocationsAsync(vehicleId);
 
         var res = req.CreateResponse(HttpStatusCode.OK);
         await res.WriteAsJsonAsync(results);

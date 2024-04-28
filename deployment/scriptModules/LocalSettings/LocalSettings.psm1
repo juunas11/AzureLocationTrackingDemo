@@ -10,19 +10,17 @@ function Show-ContainerLocalSettings {
     $appInsightsConnectionString = $mainBicepOutputs.appInsightsConnectionString.value
     $deviceProvisioningServiceGlobalEndpoint = $mainBicepOutputs.deviceProvisioningServiceGlobalEndpoint.value
     $deviceProvisioningServiceIdScope = $mainBicepOutputs.deviceProvisioningServiceIdScope.value
-    $iotHubHostName = $mainBicepOutputs.iotHubHostName.value
 
-    Write-Host "User secrets needed to run AzureLocationTracking.TrackerDevice locally:"
-    $trackerDeviceSecrets = @{
+    Write-Host "User secrets needed to run AzureLocationTracking.VehicleSimulator locally:"
+    $vehicleSimulatorSecrets = @{
         SQL_CONNECTION_STRING                 = "<your-local-sql-db-connection-string>"
         ENVIRONMENT                           = "dev"
         APPLICATIONINSIGHTS_CONNECTION_STRING = $appInsightsConnectionString
         DEVICE_PROVISIONING_PRIMARY_KEY       = $devEnrollmentGroupPrimaryKey
         DEVICE_PROVISIONING_GLOBAL_ENDPOINT   = $deviceProvisioningServiceGlobalEndpoint
         DEVICE_PROVISIONING_ID_SCOPE          = $deviceProvisioningServiceIdScope
-        IOT_HUB_HOST_NAME                     = $iotHubHostName
     } | ConvertTo-Json
-    Write-Host $trackerDeviceSecrets
+    Write-Host $vehicleSimulatorSecrets
 }
 
 function Show-FunctionLocalSettings {

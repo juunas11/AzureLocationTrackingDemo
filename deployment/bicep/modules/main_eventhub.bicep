@@ -1,13 +1,16 @@
 param location string
 param naming object
+param iotHubEventHubPartitionCount int
+param eventHubSku string
+param eventHubCapacity int
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   name: naming.eventHubNamespace
   location: location
   sku: {
-    name: 'Standard'
-    tier: 'Standard'
-    capacity: 1
+    name: eventHubSku
+    tier: eventHubSku
+    capacity: eventHubCapacity
   }
   properties: {}
 }
@@ -16,7 +19,7 @@ resource prodLocationDataEventHub 'Microsoft.EventHub/namespaces/eventhubs@2021-
   parent: eventHubNamespace
   name: naming.locationDataEventHubProd
   properties: {
-    partitionCount: 16
+    partitionCount: iotHubEventHubPartitionCount
     messageRetentionInDays: 1
   }
 
@@ -33,6 +36,7 @@ resource prodLocationDataEventHub 'Microsoft.EventHub/namespaces/eventhubs@2021-
   }
 }
 
+// Used from local development environment
 resource devLocationDataEventHub 'Microsoft.EventHub/namespaces/eventhubs@2021-11-01' = {
   parent: eventHubNamespace
   name: naming.locationDataEventHubDev

@@ -207,6 +207,28 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
                             displayName: 'Average processing time (ms)'
                           }
                         }
+                        {
+                          resourceMetadata: {
+                            id: appInsights.id
+                          }
+                          name: 'customMetrics/Location update event processing time (ms)'
+                          aggregationType: 2
+                          namespace: 'microsoft.insights/components/kusto'
+                          metricVisualization: {
+                            displayName: 'Minimum processing time (ms)'
+                          }
+                        }
+                        {
+                          resourceMetadata: {
+                            id: appInsights.id
+                          }
+                          name: 'customMetrics/Location update event processing time (ms)'
+                          aggregationType: 3
+                          namespace: 'microsoft.insights/components/kusto'
+                          metricVisualization: {
+                            displayName: 'Maximum processing time (ms)'
+                          }
+                        }
                       ]
                       title: 'Event end-to-end processing time'
                       titleKind: 1
@@ -658,6 +680,7 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
             metadata: {
               #disable-next-line BCP036
               type: 'Extension/HubsExtension/PartType/MonitorChartPart'
+              #disable-next-line BCP037
               filters: {
                 EntityName: {
                   model: {
@@ -949,6 +972,72 @@ resource dashboard 'Microsoft.Portal/dashboards@2020-09-01-preview' = {
                           }
                         }
                       ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+          {
+            position: {
+              x: 0
+              y: 13
+              colSpan: 7
+              rowSpan: 4
+            }
+            metadata: {
+              #disable-next-line BCP036
+              type: 'Extension/HubsExtension/PartType/MonitorChartPart'
+              inputs: [
+                {
+                  name: 'sharedTimeRange'
+                  isOptional: true
+                }
+                {
+                  name: 'options'
+                  isOptional: true
+                  value: {
+                    chart: {
+                      metrics: [
+                        {
+                          resourceMetadata: {
+                            id: appInsights.id
+                          }
+                          name: 'customMetrics/Event Hub batch size'
+                          aggregationType: 4
+                          namespace: 'microsoft.insights/components/kusto'
+                          metricVisualization: {
+                            displayName: 'Avg batch size'
+                          }
+                        }
+                        {
+                          resourceMetadata: {
+                            id: appInsights.id
+                          }
+                          name: 'customMetrics/Event Hub batch size'
+                          aggregationType: 2
+                          namespace: 'microsoft.insights/components/kusto'
+                          metricVisualization: {
+                            displayName: 'Min batch size'
+                          }
+                        }
+                        {
+                          resourceMetadata: {
+                            id: appInsights.id
+                          }
+                          name: 'customMetrics/Event Hub batch size'
+                          aggregationType: 3
+                          namespace: 'microsoft.insights/components/kusto'
+                          metricVisualization: {
+                            displayName: 'Max batch size'
+                          }
+                        }
+                      ]
+                      title: 'Event Hub batch size'
+                      titleKind: 1
+                      visualization: {
+                        chartType: 2
+                      }
                     }
                   }
                 }

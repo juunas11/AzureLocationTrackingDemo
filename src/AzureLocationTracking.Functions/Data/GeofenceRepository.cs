@@ -5,6 +5,7 @@ using Microsoft.SqlServer.Types;
 using System.Data.Common;
 
 namespace AzureLocationTracking.Functions.Data;
+
 public class GeofenceRepository : RepositoryBase
 {
     public GeofenceRepository(IConfiguration configuration)
@@ -14,26 +15,26 @@ public class GeofenceRepository : RepositoryBase
 
     public Task<IEnumerable<Geofence>> GetGeofencesAsync()
     {
-        return SqlConnection.QueryAsync<Geofence>("SELECT [Id], [Border] FROM [dbo].[Geofences]");
+        return SqlConnection.QueryAsync<Geofence>("SELECT [Id], [Border], [Name] FROM [dbo].[Geofences]");
     }
 
     public async Task<(int[] enteredGeofenceIds, int[] exitedGeofenceIds)> GetEnteredAndExitedGeofenceIdsAsync(
-        Guid trackerId,
+        Guid vehicleId,
         SqlGeography location,
         DateTime eventTimestamp,
         DbTransaction transaction)
     {
         var reader = await SqlConnection.QueryMultipleAsync(
             @"SELECT [GeofenceId]
-              FROM [dbo].[LocationTrackersInGeofences]
-              WHERE [LocationTrackerId] = @trackerId AND [EntryTimestamp] < @eventTimestamp AND [ExitTimestamp] IS NULL;
+              FROM [dbo].[VehiclesInGeofences]
+              WHERE [VehicleId] = @vehicleId AND [EntryTimestamp] < @eventTimestamp AND [ExitTimestamp] IS NULL;
 
               SELECT [Id]
               FROM [dbo].[Geofences]
-              WHERE [Border].STContains(@location) > 0",
+              WHERE [Border].STContains(@location) = 1",
             new
             {
-                trackerId,
+                vehicleId,
                 eventTimestamp,
                 location,
             },
@@ -50,8 +51,8 @@ public class GeofenceRepository : RepositoryBase
         return (enteredGeofenceIds, exitedGeofenceIds);
     }
 
-    public async Task AddLocationTrackerInGeofencesAsync(
-        Guid trackerId,
+    public async Task AddVehicleInGeofencesAsync(
+        Guid vehicleId,
         int[] enteredGeofenceIds,
         DateTime eventTimestamp,
         DbTransaction transaction)
@@ -59,12 +60,12 @@ public class GeofenceRepository : RepositoryBase
         if (enteredGeofenceIds.Length > 0)
         {
             await SqlConnection.ExecuteAsync(
-                @"INSERT INTO [dbo].[LocationTrackersInGeofences] ([LocationTrackerId], [GeofenceId], [EntryTimestamp])
-                  VALUES (@trackerId, @geofenceId, @eventTimestamp)",
+                @"INSERT INTO [dbo].[VehiclesInGeofences] ([VehicleId], [GeofenceId], [EntryTimestamp])
+                  VALUES (@vehicleId, @geofenceId, @eventTimestamp)",
                 enteredGeofenceIds
                     .Select(id => new
                     {
-                        trackerId,
+                        vehicleId,
                         geofenceId = id,
                         eventTimestamp,
                     })
@@ -73,8 +74,8 @@ public class GeofenceRepository : RepositoryBase
         }
     }
 
-    public async Task SetLocationTrackerOutOfGeofencesAsync(
-        Guid trackerId,
+    public async Task SetVehicleOutOfGeofencesAsync(
+        Guid vehicleId,
         int[] exitedGeofenceIds,
         DateTime eventTimestamp,
         DbTransaction transaction)
@@ -82,13 +83,13 @@ public class GeofenceRepository : RepositoryBase
         if (exitedGeofenceIds.Length > 0)
         {
             await SqlConnection.ExecuteAsync(
-                @"UPDATE [dbo].[LocationTrackersInGeofences]
+                @"UPDATE [dbo].[VehiclesInGeofences]
                   SET [ExitTimestamp] = @eventTimestamp
-                  WHERE [LocationTrackerId] = @trackerId AND [GeofenceId] IN @exitedGeofenceIds AND [ExitTimestamp] IS NULL",
+                  WHERE [VehicleId] = @vehicleId AND [GeofenceId] IN @exitedGeofenceIds AND [ExitTimestamp] IS NULL",
                 new
                 {
                     eventTimestamp,
-                    trackerId,
+                    vehicleId,
                     exitedGeofenceIds,
                 },
                 transaction);

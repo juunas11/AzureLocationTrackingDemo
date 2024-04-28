@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Azure.Core;
 
 namespace AzureLocationTracking.Functions.Data;
+
 public class DataExplorerRepository
 {
     private readonly string _adxClusterUri;
@@ -20,8 +21,8 @@ public class DataExplorerRepository
         _tokenCredential = tokenCredential;
     }
 
-    public async Task<List<PastLocationDto>> GetTrackerRecentPastLocationsAsync(
-        Guid trackerId)
+    public async Task<List<PastLocationDto>> GetVehicleRecentPastLocationsAsync(
+        Guid vehicleId)
     {
         var connectionStringBuilder = new KustoConnectionStringBuilder(_adxClusterUri, _adxDbName)
             .WithAadAzureTokenCredentialsAuthentication(_tokenCredential);
@@ -29,7 +30,7 @@ public class DataExplorerRepository
         using var client = KustoClientFactory.CreateCslQueryProvider(connectionStringBuilder);
 
         var adxQuery = $@"locations
-| where DeviceId == '{trackerId}'
+| where DeviceId == '{vehicleId}'
 | where Timestamp > ago(10m)
 | order by Timestamp desc
 | project Longitude, Latitude, Timestamp

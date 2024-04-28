@@ -1,5 +1,7 @@
 param location string
 param naming object
+param sqlDbSku string
+param sqlDbCapacity int
 param sqlAdminUserId string
 param sqlAdminUsername string
 param sqlFirewallAllowedIpAddress string
@@ -42,13 +44,13 @@ resource sqlDb 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
   name: naming.sqlDb
   location: location
   sku: {
-    name: 'Standard'
-    tier: 'Standard'
-    capacity: 10
+    name: sqlDbSku
+    capacity: sqlDbCapacity
   }
   properties: {
+    requestedBackupStorageRedundancy: 'Local'
     collation: 'SQL_Latin1_General_CP1_CI_AS'
-    maxSizeBytes: 2147483648
+    maxSizeBytes: 2147483648 // 2 GB
   }
 }
 

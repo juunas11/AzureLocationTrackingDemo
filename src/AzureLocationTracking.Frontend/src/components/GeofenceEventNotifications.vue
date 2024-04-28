@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import { emitter, type Events } from '@/services/eventBus';
+import { useGeofenceStore } from '@/stores/geofence';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 interface GeofenceEvent {
-    trackerId: string;
+    vehicleId: string;
     geofenceId: number;
+    geofenceName: string;
     eventType: 'entered' | 'exited';
 }
 
+const geofenceStore = useGeofenceStore();
 const geofenceEvents = ref<GeofenceEvent[]>([]);
 
-function addGeofenceEvent(trackerId: string, geofenceId: number, eventType: 'entered' | 'exited') {
+function addGeofenceEvent(vehicleId: string, geofenceId: number, eventType: 'entered' | 'exited') {
+    const name = geofenceStore.getGeofenceName(geofenceId);
     geofenceEvents.value.push({
-        trackerId,
+        vehicleId,
         geofenceId,
+        geofenceName: name,
         eventType
     });
 }
@@ -22,13 +27,13 @@ function removeOldestGeofenceEvent() {
     geofenceEvents.value.shift();
 }
 
-function onGeofenceEntered({ trackerId, geofenceId }: Events['geofenceEntered']) {
-    addGeofenceEvent(trackerId, geofenceId, 'entered');
+function onGeofenceEntered({ vehicleId, geofenceId }: Events['geofenceEntered']) {
+    addGeofenceEvent(vehicleId, geofenceId, 'entered');
     setTimeout(removeOldestGeofenceEvent, 5000);
 }
 
-function onGeofenceExited({ trackerId, geofenceId }: Events['geofenceExited']) {
-    addGeofenceEvent(trackerId, geofenceId, 'exited');
+function onGeofenceExited({ vehicleId, geofenceId }: Events['geofenceExited']) {
+    addGeofenceEvent(vehicleId, geofenceId, 'exited');
     setTimeout(removeOldestGeofenceEvent, 5000);
 }
 
@@ -44,8 +49,8 @@ onUnmounted(() => {
 
 <template>
     <div class="eventsContainer">
-        <p v-for="geofenceEvent in geofenceEvents">{{ `Tracker ${geofenceEvent.trackerId} ${geofenceEvent.eventType}
-                    geofence ${geofenceEvent.geofenceId}` }}</p>
+        <p v-for="geofenceEvent in geofenceEvents">{{ `Vehicle ${geofenceEvent.vehicleId} ${geofenceEvent.eventType}
+                    geofence ${geofenceEvent.geofenceName ?? "Unknown"} (${geofenceEvent.geofenceId})` }}</p>
     </div>
 </template>
 

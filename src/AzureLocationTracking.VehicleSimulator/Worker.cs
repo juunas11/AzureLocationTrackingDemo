@@ -12,8 +12,9 @@ using NetTopologySuite.IO.Converters;
 using System.Text;
 using System.Text.Json;
 using Dapper;
+using AzureLocationTracking.VehicleSimulator.Extensions;
 
-namespace AzureLocationTracking.TrackerDevice;
+namespace AzureLocationTracking.VehicleSimulator;
 
 public class Worker : BackgroundService
 {
@@ -26,7 +27,6 @@ public class Worker : BackgroundService
     private readonly string _deviceProvisioningGlobalEndpoint;
     private readonly string _deviceProvisioningIdScope;
     private readonly string _deviceProvisioningPrimaryKey;
-    private readonly string _iotHubHostName;
     private readonly int _simulatedDeviceCount;
 
     public Worker(
@@ -48,9 +48,6 @@ public class Worker : BackgroundService
             ?? throw new Exception("DEVICE_PROVISIONING_ID_SCOPE missing from config");
         _deviceProvisioningPrimaryKey = configuration["DEVICE_PROVISIONING_PRIMARY_KEY"]
             ?? throw new Exception("DEVICE_PROVISIONING_PRIMARY_KEY missing from config");
-
-        _iotHubHostName = configuration["IOT_HUB_HOST_NAME"]
-            ?? throw new Exception("IOT_HUB_HOST_NAME missing from config");
 
         _simulatedDeviceCount = configuration.GetValue<int>("SIMULATED_DEVICE_COUNT");
     }
@@ -104,40 +101,36 @@ public class Worker : BackgroundService
         var dpsDeviceKey = DeviceProvisioningKey.CreateFromEnrollmentGroupKey(
             _deviceProvisioningPrimaryKey,
             deviceId);
-        await ProvisionAsync(dpsDeviceKey);
+        var iotHubHostName = await ProvisionAsync(dpsDeviceKey);
         await AddDeviceToDatabaseAsync(deviceId);
 
         using var deviceClient = DeviceClient.Create(
-            _iotHubHostName,
+            iotHubHostName,
             new DeviceAuthenticationWithRegistrySymmetricKey(
                 deviceId.ToString(),
                 dpsDeviceKey.GetPrimaryKey()));
 
+        // Get initial parameters
         var twin = await deviceClient.GetTwinAsync(stoppingToken);
-        int eventIntervalMillis = twin.Properties.Desired.Contains("eventIntervalMillis")
-            ? (int)twin.Properties.Desired["eventIntervalMillis"]
-            : DefaultEventIntervalMillis;
-        int speedKilometersPerHour = twin.Properties.Desired.Contains("speedKilometersPerHour")
-            ? (int)twin.Properties.Desired["speedKilometersPerHour"]
-            : DefaultSpeedKilometersPerHour;
+        int eventIntervalMillis = twin.Properties.Desired.GetIntegerOrDefault("eventIntervalMillis", DefaultEventIntervalMillis);
+        int speedKilometersPerHour = twin.Properties.Desired.GetIntegerOrDefault("speedKilometersPerHour", DefaultSpeedKilometersPerHour);
         device.SetSpeed(speedKilometersPerHour);
 
+        // Report initial parameters as received
         await deviceClient.UpdateReportedPropertiesAsync(new TwinCollection(JsonSerializer.Serialize(new
         {
             eventIntervalMillis,
             speedKilometersPerHour,
         })), stoppingToken);
 
+        // Start listening for updates to desired properties
         await deviceClient.SetDesiredPropertyUpdateCallbackAsync(async (desiredProperties, _) =>
         {
-            eventIntervalMillis = desiredProperties.Contains("eventIntervalMillis")
-                ? (int)desiredProperties["eventIntervalMillis"]
-                : DefaultEventIntervalMillis;
-            int updatedSpeedKilometersPerHour = desiredProperties.Contains("speedKilometersPerHour")
-                ? (int)desiredProperties["speedKilometersPerHour"]
-                : DefaultSpeedKilometersPerHour;
+            eventIntervalMillis = desiredProperties.GetIntegerOrDefault("eventIntervalMillis", DefaultEventIntervalMillis);
+            int updatedSpeedKilometersPerHour = desiredProperties.GetIntegerOrDefault("speedKilometersPerHour", DefaultSpeedKilometersPerHour);
             device.SetSpeed(updatedSpeedKilometersPerHour);
 
+            // Report update as received
             await deviceClient.UpdateReportedPropertiesAsync(new TwinCollection(JsonSerializer.Serialize(new
             {
                 eventIntervalMillis,
@@ -180,7 +173,7 @@ public class Worker : BackgroundService
 
     }
 
-    private async Task ProvisionAsync(SecurityProviderSymmetricKey dpsDeviceKey)
+    private async Task<string> ProvisionAsync(SecurityProviderSymmetricKey dpsDeviceKey)
     {
         using var transport = new ProvisioningTransportHandlerAmqp();
         var deviceClient = ProvisioningDeviceClient.Create(
@@ -188,7 +181,8 @@ public class Worker : BackgroundService
             _deviceProvisioningIdScope,
             dpsDeviceKey,
             transport);
-        await deviceClient.RegisterAsync();
+        var result = await deviceClient.RegisterAsync();
+        return result.AssignedHub;
     }
 
     private async Task AddDeviceToDatabaseAsync(Guid deviceId)
@@ -199,7 +193,7 @@ public class Worker : BackgroundService
 
         using var conn = new SqlConnection(_sqlConnectionString);
         await conn.ExecuteAsync(
-            "INSERT INTO [dbo].[LocationTrackers] ([Id], [CreatedAt]) VALUES (@id, SYSUTCDATETIME())",
+            "INSERT INTO [dbo].[Vehicles] ([Id], [CreatedAt]) VALUES (@id, SYSUTCDATETIME())",
             new
             {
                 id = deviceId

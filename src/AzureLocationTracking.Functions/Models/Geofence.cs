@@ -6,4 +6,5 @@ public class Geofence
 {
     public int Id { get; set; }
     public SqlGeography Border { get; set; }
+    public string Name { get; set; }
 }

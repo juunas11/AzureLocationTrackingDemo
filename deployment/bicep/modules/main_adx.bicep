@@ -1,5 +1,8 @@
 param location string
 param naming object
+param adxSkuName string
+param adxSkuTier string
+param adxCapacity int
 param adxAdminUserId string
 param eventHubNamespaceName string
 param prodLocationDataEventHubName string
@@ -25,9 +28,9 @@ resource cluster 'Microsoft.Kusto/clusters@2022-12-29' = {
   name: naming.adxCluster
   location: location
   sku: {
-    name: 'Dev(No SLA)_Standard_E2a_v4'
-    tier: 'Basic'
-    capacity: 1
+    name: adxSkuName
+    tier: adxSkuTier
+    capacity: adxCapacity
   }
   identity: {
     type: 'SystemAssigned'
