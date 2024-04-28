@@ -11,7 +11,7 @@
 		<PackageReference Include="GeoJSON.Net" Version="1.2.19" />
 		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.22.0" />
 		<PackageReference Include="Microsoft.Azure.Devices" Version="1.39.1" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.21.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.22.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="1.2.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.EventHubs" Version="6.2.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.1.0" />
