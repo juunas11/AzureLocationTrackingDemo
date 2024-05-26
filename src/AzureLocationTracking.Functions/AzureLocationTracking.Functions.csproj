@@ -13,11 +13,11 @@
 		<PackageReference Include="Microsoft.Azure.Devices" Version="1.39.1" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.22.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="1.2.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.EventHubs" Version="6.2.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.1.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.SignalRService" Version="1.13.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.EventHubs" Version="6.3.1" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.2.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.SignalRService" Version="1.13.2" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.17.2" />
-		<PackageReference Include="Microsoft.Azure.Kusto.Data" Version="12.2.0" />
+		<PackageReference Include="Microsoft.Azure.Kusto.Data" Version="12.2.1" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
 		<PackageReference Include="Microsoft.SqlServer.Types" Version="160.1000.6" />

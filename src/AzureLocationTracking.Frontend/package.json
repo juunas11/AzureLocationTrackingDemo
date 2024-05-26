@@ -13,21 +13,21 @@
     "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false"
   },
   "dependencies": {
-    "@azure/msal-browser": "^3.9.0",
+    "@azure/msal-browser": "^3.14.0",
     "@microsoft/signalr": "^8.0.0",
     "azure-maps-control": "^2.3.6",
     "mitt": "^3.0.1",
     "pinia": "^2.1.7",
-    "vue": "^3.4.19"
+    "vue": "^3.4.27"
   },
   "devDependencies": {
-    "@tsconfig/node20": "^20.1.2",
-    "@types/node": "^20.11.19",
+    "@tsconfig/node20": "^20.1.4",
+    "@types/node": "^20.12.12",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/tsconfig": "^0.5.1",
     "npm-run-all": "^4.1.5",
-    "typescript": "^5.3.3",
-    "vite": "^5.1.3",
-    "vue-tsc": "^1.8.27"
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11",
+    "vue-tsc": "^2.0.19"
   }
 }
