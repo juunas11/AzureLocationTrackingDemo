@@ -121,8 +121,8 @@ function updatePastLocations(vehicleId: string) {
 
 function initMap() {
   const newMap = new atlas.Map("myMap", {
-    center: [4.420184988709366, 51.229767869110844],
-    zoom: 13,
+    center: [24.940806, 60.170218],
+    zoom: 14,
     view: "Auto",
     authOptions: {
       authType: "anonymous" as any,
