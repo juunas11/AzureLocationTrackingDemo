@@ -12,6 +12,12 @@ internal class SimulatedDevice
 
     public SimulatedDevice(Coordinate[] coordinates)
     {
+        var reverseCoordinates = Random.Shared.Next(2) == 0;
+        if (reverseCoordinates)
+        {
+            Array.Reverse(coordinates);
+        }
+
         _coordinates = coordinates;
         _distances = GetDistancesBetweenCoordinates(coordinates);
         // Start at random point on the line

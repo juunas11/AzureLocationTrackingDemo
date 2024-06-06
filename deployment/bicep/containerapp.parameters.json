@@ -12,10 +12,10 @@
       "value": 10
     },
     "minReplicas": {
-      "value": 3
+      "value": 0
     },
     "maxReplicas": {
-      "value": 3
+      "value": 1
     }
   }
 }

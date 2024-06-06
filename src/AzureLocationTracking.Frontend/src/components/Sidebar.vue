@@ -49,7 +49,7 @@ function onParametersSendClick() {
 
 <template>
     <div v-if="sidebarStore.isOpen" class="container">
-        <button type="button" @click="sidebarStore.closeSidebar">Close</button>
+        <button type="button" class="btn-close" @click="sidebarStore.closeSidebar">Close</button>
         <p>
             <b>Vehicle ID:</b> <span id="vehicleIdDisplay">{{ sidebarStore.selectedVehicleId }}</span>
         </p>
@@ -84,8 +84,15 @@ function onParametersSendClick() {
     top: 0;
     right: 0;
     bottom: 0;
-    width: 400px;
+    width: 440px;
+    max-width: 100%;
     background-color: white;
     padding: 16px;
+    z-index: 1;
+    box-sizing: border-box;
+}
+
+.container .btn-close {
+    float: right;
 }
 </style>
